@@ -1,0 +1,22 @@
+# GitLab CI/CD for Apps Script Fleet
+#
+# This root file includes all pipeline definitions.
+# See .gitlab/ directory for individual configurations.
+#
+# Required CI/CD Variables: see docs/setup-gitlab.md
+
+stages:
+  - check
+  - deploy
+  - sync
+
+include:
+  - local: .gitlab/ci.yml
+  - local: .gitlab/cd.yml
+  - local: .gitlab/sync-template.yml
+  - local: .gitlab/pre-deploy.yml
+    rules:
+      - exists: [.gitlab/pre-deploy.yml]
+  - local: .gitlab/post-deploy.yml
+    rules:
+      - exists: [.gitlab/post-deploy.yml]

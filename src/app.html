@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+
+      #message {
+        padding: 16px;
+        background: #f0f0f0;
+        border-radius: 8px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GAS Web App</h1>
+    <div id="message">Loading...</div>
+
+    <script>
+      google.script.run
+        .withSuccessHandler(function (msg) {
+          document.getElementById("message").textContent = msg;
+        })
+        .getMessage();
+    </script>
+  </body>
+</html>

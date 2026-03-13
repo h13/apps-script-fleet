@@ -1,0 +1,52 @@
+# Template-managed files (whitelist)
+#
+# Only files listed here with :! prefix are synced from the upstream template.
+# Everything else (*) is ignored, protecting user-created files.
+#
+# IMPORTANT: When adding a new file to the template, add it here too.
+# The CI check "templatesyncignore_check" will catch missing entries.
+
+# CI/CD — GitHub Actions
+:!.github/workflows/ci.yml
+:!.github/workflows/cd.yml
+:!.github/workflows/sync-template.yml
+
+# CI/CD — GitLab
+:!.gitlab-ci.yml
+:!.gitlab/ci.yml
+:!.gitlab/cd.yml
+:!.gitlab/sync-template.yml
+
+# Build & tooling
+:!eslint.config.mjs
+:!rollup.config.mjs
+:!tsconfig.json
+:!package.json
+:!.prettierrc
+:!.htmlhintrc
+:!.stylelintrc.json
+:!.editorconfig
+:!.mise.toml
+:!renovate.json
+
+# Git hooks
+:!.husky/pre-commit
+
+# Dev container
+:!.devcontainer/devcontainer.json
+
+# Docs (template-managed)
+:!docs/setup-github.md
+:!docs/setup-github.ja.md
+:!docs/setup-gitlab.md
+:!docs/setup-gitlab.ja.md
+
+# Meta
+:!.templatesyncignore
+:!.claspignore
+:!.gitignore
+:!CONTRIBUTING.md
+:!LICENSE
+
+# Ignore everything else (user files: src/, test/, appsscript.json, README.md, etc.)
+*

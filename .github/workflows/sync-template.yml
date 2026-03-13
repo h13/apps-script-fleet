@@ -1,0 +1,24 @@
+name: Sync from template
+
+on:
+  schedule:
+    - cron: "0 0 * * 0" # Every Sunday at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    if: github.event.repository.is_template != true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: AndreasAugustin/actions-template-sync@8ec19a5f2721ffb81ff809aa340ddf75e6a85ea6 # v2.5.2
+        with:
+          source_repo_path: h13/apps-script-fleet
+          upstream_branch: main
+          pr_title: "chore: sync from apps-script-fleet"
+          pr_labels: template-sync

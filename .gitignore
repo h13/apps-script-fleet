@@ -1,0 +1,12 @@
+node_modules
+dist/
+build/
+.DS_Store
+.clasp.json
+.clasp-dev.json
+.clasp-prod.json
+*.tgz
+.vscode/
+coverage/
+*.tsbuildinfo
+CLAUDE.md

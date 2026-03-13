@@ -1,0 +1,88 @@
+# Template Sync: pull upstream template changes
+#
+# Requires Pipeline Schedule (CI/CD → Schedules).
+# See docs/setup-gitlab.md for setup instructions.
+
+template_sync:
+  stage: sync
+  image: alpine/git@sha256:d453f54c83320412aa89c391b076930bd8569bc1012285e8c68ce2d4435826a3
+  variables:
+    TEMPLATE_REPO_URL: "https://github.com/h13/apps-script-fleet.git"
+  script:
+    - |
+      set -f  # disable globbing to safely expand $INCLUDE
+
+      # Skip circular sync (prevent syncing from ourselves)
+      if echo "$TEMPLATE_REPO_URL" | grep -q "$CI_PROJECT_PATH"; then
+        echo "TEMPLATE_REPO_URL points to this project. Skipping to avoid circular sync."
+        exit 0
+      fi
+
+      git config user.email "gitlab-ci@$CI_SERVER_HOST"
+      git config user.name "GitLab CI"
+
+      # Fetch upstream template (inject CI_JOB_TOKEN for same-instance GitLab URLs)
+      FETCH_URL="$TEMPLATE_REPO_URL"
+      if echo "$TEMPLATE_REPO_URL" | grep -q "$CI_SERVER_HOST"; then
+        FETCH_URL=$(echo "$TEMPLATE_REPO_URL" | sed "s|https://|https://gitlab-ci-token:${CI_JOB_TOKEN}@|")
+      fi
+      git remote add template "$FETCH_URL" || true
+      git fetch template main
+
+      # Build include list from .templatesyncignore (whitelist: :! prefixed lines)
+      INCLUDE=""
+      if [ -f .templatesyncignore ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+          line=$(echo "$line" | sed 's/#.*//' | xargs)
+          [ -z "$line" ] && continue
+          case "$line" in
+            :!*) INCLUDE="$INCLUDE ${line#:!}" ;;
+          esac
+        done < .templatesyncignore
+      fi
+
+      if [ -z "$INCLUDE" ]; then
+        echo "No files listed in .templatesyncignore whitelist. Skipping."
+        exit 0
+      fi
+
+      # Check for differences (only whitelisted files)
+      if git diff --quiet HEAD template/main -- $INCLUDE; then
+        echo "No template updates found."
+        exit 0
+      fi
+
+      # Create sync branch and apply changes
+      BRANCH="chore/template-sync-$(date +%Y%m%d-%H%M%S)"
+      git checkout -b "$BRANCH"
+      for f in $INCLUDE; do
+        git checkout template/main -- "$f" 2>/dev/null || echo "Skipping $f (not in template)"
+      done
+      git add -A
+
+      if git diff --cached --quiet; then
+        echo "No effective changes after filtering."
+        exit 0
+      fi
+
+      git commit -m "chore: sync from upstream template"
+
+      # Push and create MR
+      # Template Project: auto-merge after CI passes
+      # User Projects: manual review (TEMPLATE_PROJECT_PATH is not set)
+      MERGE_OPTION=""
+      if [ -n "$TEMPLATE_PROJECT_PATH" ] && [ "$CI_PROJECT_PATH" = "$TEMPLATE_PROJECT_PATH" ]; then
+        MERGE_OPTION="-o merge_request.merge_when_pipeline_succeeds"
+      fi
+
+      PUSH_URL="https://gitlab-ci-token:${GITLAB_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+      git push "$PUSH_URL" "$BRANCH" \
+        -o merge_request.create \
+        -o merge_request.title="chore: sync from upstream template" \
+        -o merge_request.label="template-sync" \
+        -o merge_request.target="$CI_DEFAULT_BRANCH" \
+        $MERGE_OPTION
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual

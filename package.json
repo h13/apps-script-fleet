@@ -1,0 +1,66 @@
+{
+  "name": "apps-script-fleet",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run clean && pnpm run bundle && cp appsscript.json dist/appsscript.json && cp src/*.html dist/",
+    "bundle": "rollup --no-treeshake -c rollup.config.mjs",
+    "check": "pnpm run lint && pnpm run lint:css && pnpm run lint:html && pnpm run typecheck && pnpm run test",
+    "clean": "rimraf build dist",
+    "deploy": "pnpm run check && pnpm run build && cp .clasp-dev.json .clasp.json && clasp push -f",
+    "deploy:prod": "pnpm run check && pnpm run build && cp .clasp-prod.json .clasp.json && clasp push",
+    "format": "prettier --write .",
+    "lint": "eslint --fix src/ test/",
+    "lint:css": "stylelint '**/*.{css,scss,html}'",
+    "lint:html": "htmlhint --ignore 'coverage/**,dist/**' '**/*.html'",
+    "prepare": "husky",
+    "test": "jest test/ --passWithNoTests --detectOpenHandles --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.html": [
+      "stylelint --fix",
+      "htmlhint",
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@google/clasp": "3.3.0",
+    "@types/google-apps-script": "2.0.8",
+    "@types/jest": "30.0.0",
+    "eslint": "10.0.3",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.5",
+    "htmlhint": "1.9.2",
+    "husky": "9.1.7",
+    "jest": "30.3.0",
+    "lint-staged": "16.3.3",
+    "postcss-html": "1.8.1",
+    "prettier": "3.8.1",
+    "rimraf": "6.1.3",
+    "rollup": "4.59.0",
+    "rollup-plugin-cleanup": "3.2.1",
+    "rollup-plugin-prettier": "4.1.2",
+    "rollup-plugin-typescript2": "0.36.0",
+    "stylelint": "17.4.0",
+    "stylelint-config-standard": "40.0.0",
+    "ts-jest": "29.4.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.0"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "pnpm": {
+    "overrides": {
+      "diff": ">=8.0.3"
+    }
+  }
+}
