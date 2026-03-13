@@ -1,0 +1,58 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [dev, main]
+
+jobs:
+  deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
+    concurrency:
+      group: deploy-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: ${{ github.event.workflow_run.head_branch != 'main' }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Pre-deploy hook
+        if: hashFiles('.github/hooks/pre-deploy.sh') != ''
+        run: bash .github/hooks/pre-deploy.sh
+        env:
+          DEPLOY_ENV: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
+
+      - name: Setup clasp credentials
+        run: |
+          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
+
+      - name: Push to GAS
+        run: pnpm exec clasp push -f
+
+      - name: Deploy new version
+        run: pnpm exec clasp deploy -i "${{ vars.DEPLOYMENT_ID }}" --description "CD deploy from ${{ github.event.workflow_run.head_branch }}@${{ github.event.workflow_run.head_sha }}"
+
+      - name: Post-deploy hook
+        if: always() && hashFiles('.github/hooks/post-deploy.sh') != ''
+        run: bash .github/hooks/post-deploy.sh
+        env:
+          DEPLOY_ENV: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
+          DEPLOY_STATUS: ${{ job.status }}
