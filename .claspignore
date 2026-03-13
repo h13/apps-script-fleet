@@ -1,0 +1,38 @@
+# Source and test files (dist/ is pushed, not src/)
+src/
+test/
+
+# Configuration files
+node_modules/
+.github/
+.gitlab/
+.devcontainer/
+.husky/
+coverage/
+build/
+
+# Config files
+tsconfig.json
+jest.config.json
+eslint.config.mjs
+rollup.config.mjs
+package.json
+pnpm-lock.yaml
+.prettierrc
+.htmlhintrc
+.stylelintrc.json
+.editorconfig
+.mise.toml
+renovate.json
+.gitignore
+.claspignore
+.templatesyncignore
+.gitlab-ci.yml
+CLAUDE.md
+
+# Documentation
+docs/
+README.md
+README.ja.md
+CONTRIBUTING.md
+LICENSE

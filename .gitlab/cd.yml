@@ -1,0 +1,35 @@
+# CD: clasp push + deploy
+
+.deploy_base:
+  stage: deploy
+  image: node:24@sha256:3a09aa6354567619221ef6c45a5051b671f953f0a1924d1f819ffb236e520e6b
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm run build
+    - echo "$CLASPRC_JSON" > ~/.clasprc.json
+    - echo "$CLASP_JSON" > .clasp.json
+    - pnpm exec clasp push -f
+    - pnpm exec clasp deploy -i "$DEPLOYMENT_ID" --description "GitLab CD from $CI_COMMIT_REF_NAME@$CI_COMMIT_SHORT_SHA"
+  cache:
+    key: pnpm-$CI_COMMIT_REF_SLUG
+    paths:
+      - .pnpm-store
+  needs: [check]
+
+deploy_dev:
+  extends: .deploy_base
+  environment:
+    name: development
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_PROJECT_PATH != $TEMPLATE_PROJECT_PATH
+
+deploy_prod:
+  extends: .deploy_base
+  environment:
+    name: production
+  resource_group: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push" && $CI_PROJECT_PATH != $TEMPLATE_PROJECT_PATH
