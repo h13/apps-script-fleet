@@ -196,7 +196,12 @@ pnpm run deploy
 
 ### OAuth スコープの追加
 
-`appsscript.json` の `oauthScopes` を編集：
+デフォルトでは `appsscript.json` に明示的な `oauthScopes` は含まれていません。Apps Script がコードから必要なスコープを自動検出します。ほとんどのプロジェクトではこのアプローチを推奨します：
+
+- 個人アカウント（Workspace 以外）での OAuth 同意画面ブロックを回避できます。
+- スクリプトを実行するためだけに GCP プロジェクトの作成や OAuth 同意画面の設定が不要です。
+
+**明示的なスコープが必要な場合**: Apps Script が自動検出できないスコープ（例: `UrlFetchApp` 用の `script.external_request`）が必要な場合、`appsscript.json` に手動で追加してください：
 
 ```json
 {
@@ -206,6 +211,8 @@ pnpm run deploy
   ]
 }
 ```
+
+> **個人アカウントの場合の注意**: 明示的な `oauthScopes` を追加すると、「このアプリはブロックされています」エラーが発生することがあります。Google が未確認アプリの制限付きスコープに対して OAuth 認証を要求するためです。これを解決するには、[GCP プロジェクトを作成](https://developers.google.com/apps-script/guides/cloud-platform-projects)し、Apps Script プロジェクトに関連付け、OAuth 同意画面を「テスト」モードに設定（自分のアカウントをテストユーザーとして追加）してください。
 
 ### ソースファイルの追加
 
