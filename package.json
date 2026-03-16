@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run clean && pnpm run bundle && cp appsscript.json dist/appsscript.json && cp src/*.html dist/",
+    "build": "pnpm run clean && pnpm run bundle && cp appsscript.json dist/appsscript.json && (cp src/*.html dist/ 2>/dev/null || true)",
     "bundle": "rollup --no-treeshake -c rollup.config.mjs",
     "check": "pnpm run lint && pnpm run lint:css && pnpm run lint:html && pnpm run typecheck && pnpm run test",
     "clean": "rimraf build dist",
