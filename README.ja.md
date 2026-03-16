@@ -219,6 +219,26 @@ pnpm run deploy
 
 `jest.config.json` の `coverageThreshold` を編集。デフォルトは全メトリクス 80% です。スコープの小さなプロジェクト（関数 5〜10 個）では 100% への引き上げを推奨します。
 
+### Web App の設定
+
+プロジェクトが Web App（`doGet` / `doPost` を使用）の場合、`appsscript.json` に `webapp` セクションを追加してください：
+
+```json
+{
+  "webapp": {
+    "access": "ANYONE",
+    "executeAs": "USER_ACCESSING"
+  }
+}
+```
+
+| プロパティ  | 選択肢                                           |
+| ----------- | ------------------------------------------------ |
+| `access`    | `MYSELF`, `DOMAIN`, `ANYONE`, `ANYONE_ANONYMOUS` |
+| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`               |
+
+詳細は[公式ドキュメント](https://developers.google.com/apps-script/manifest/web-app)を参照してください。
+
 ## テスト
 
 テストは `test/` に配置し、Jest で実行します。`src/index.ts` はカバレッジ対象外です（`HtmlService` 等の GAS グローバルは Node.js で実行できないため）。

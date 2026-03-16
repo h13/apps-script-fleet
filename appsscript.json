@@ -3,9 +3,5 @@
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
-  "webapp": {
-    "access": "ANYONE",
-    "executeAs": "USER_ACCESSING"
-  },
   "oauthScopes": ["https://www.googleapis.com/auth/script.external_request"]
 }
