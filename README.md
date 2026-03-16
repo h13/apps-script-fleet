@@ -196,7 +196,9 @@ Configured via [`h13/renovate-config:node`](https://github.com/h13/renovate-conf
 
 ### Adding OAuth Scopes
 
-Edit `oauthScopes` in `appsscript.json`:
+By default, `appsscript.json` does not include an `oauthScopes` field. This lets Apps Script automatically infer the minimal scopes needed at runtime, which avoids OAuth consent screen blocks on personal Google accounts (consumer accounts are subject to Google's [OAuth app verification requirements](https://support.google.com/cloud/answer/9110914), and explicit scopes can trigger an "unverified app" warning).
+
+If your project requires specific scopes (e.g., for `UrlFetchApp`, Spreadsheets, or Drive), add the `oauthScopes` field to `appsscript.json`:
 
 ```json
 {
@@ -206,6 +208,8 @@ Edit `oauthScopes` in `appsscript.json`:
   ]
 }
 ```
+
+> **Note**: Once you declare `oauthScopes`, Apps Script stops inferring scopes automatically. You must list every scope your project needs.
 
 ### Adding Source Files
 

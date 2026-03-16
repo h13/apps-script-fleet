@@ -196,7 +196,9 @@ pnpm run deploy
 
 ### OAuth スコープの追加
 
-`appsscript.json` の `oauthScopes` を編集：
+デフォルトでは `appsscript.json` に `oauthScopes` フィールドは含まれていません。これにより、Apps Script が実行時に必要最小限のスコープを自動推論するため、個人 Google アカウントでの OAuth 同意画面ブロックを回避できます（一般ユーザーアカウントは Google の [OAuth アプリ確認要件](https://support.google.com/cloud/answer/9110914) の対象であり、明示的なスコープは「確認されていないアプリ」警告を発生させることがあります）。
+
+プロジェクトで特定のスコープが必要な場合（例: `UrlFetchApp`、スプレッドシート、Drive）、`appsscript.json` に `oauthScopes` フィールドを追加してください：
 
 ```json
 {
@@ -206,6 +208,8 @@ pnpm run deploy
   ]
 }
 ```
+
+> **注意**: `oauthScopes` を宣言すると、Apps Script はスコープの自動推論を停止します。プロジェクトが必要とするすべてのスコープを明示的にリストする必要があります。
 
 ### ソースファイルの追加
 
