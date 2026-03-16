@@ -223,6 +223,26 @@ If your project requires specific scopes (e.g., for `UrlFetchApp`, Spreadsheets,
 
 Edit `coverageThreshold` in `jest.config.json`. Default is 80% for all metrics. For small projects (5–10 functions), consider raising it to 100%.
 
+### Web App Configuration
+
+If your project uses `doGet` or `doPost` as a Web App, add the `webapp` section to `appsscript.json`:
+
+```json
+{
+  "webapp": {
+    "access": "ANYONE",
+    "executeAs": "USER_ACCESSING"
+  }
+}
+```
+
+| Property    | Options                                  |
+| ----------- | ---------------------------------------- |
+| `access`    | `MYSELF`, `DOMAIN`, `ANYONE`, `ANYONE_ANONYMOUS` |
+| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`       |
+
+See the [official documentation](https://developers.google.com/apps-script/manifest/web-app) for details.
+
 ## Testing
 
 Tests live in `test/` and run with Jest. `src/index.ts` is excluded from coverage (Apps Script globals like `HtmlService` can't run in Node.js).
