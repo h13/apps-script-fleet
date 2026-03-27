@@ -29,16 +29,20 @@ template_sync:
       git remote add template "$FETCH_URL" || true
       git fetch template main
 
-      # Build include list from .templatesyncignore (whitelist: :! prefixed lines)
+      # Build include list from TEMPLATE's .templatesyncignore (whitelist: :! prefixed lines)
+      # Use template's version so newly added files are included in the same sync.
       INCLUDE=""
-      if [ -f .templatesyncignore ]; then
+      SYNCIGNORE=$(git show template/main:.templatesyncignore 2>/dev/null || cat .templatesyncignore 2>/dev/null || true)
+      if [ -n "$SYNCIGNORE" ]; then
         while IFS= read -r line || [ -n "$line" ]; do
           line=$(echo "$line" | sed 's/#.*//' | xargs)
           [ -z "$line" ] && continue
           case "$line" in
             :!*) INCLUDE="$INCLUDE ${line#:!}" ;;
           esac
-        done < .templatesyncignore
+        done <<EOF
+$SYNCIGNORE
+EOF
       fi
 
       if [ -z "$INCLUDE" ]; then
