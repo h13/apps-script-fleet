@@ -74,6 +74,45 @@ The result — your day looks like this:
 > Building a rich UI with client-side frameworks? [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) is the better fit.
 > Managing 5+ small Apps Script automations across your org? That's what Apps Script Fleet is for.
 
+## Organization Setup (One-Time)
+
+Before your team can use Apps Script Fleet, an org admin needs to set up shared clasp credentials:
+
+1. **Login to clasp** with the Google account that will own CI/CD deployments:
+
+   ```bash
+   npx @google/clasp login
+   ```
+
+   This generates `~/.clasprc.json`.
+
+2. **Save to your org's password manager** — share the contents of `~/.clasprc.json` as a shared credential entry (e.g., "clasp CI/CD — GAS Fleet").
+
+3. **Set `CLASPRC_JSON` as an org-level CI/CD secret**:
+   - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → add `CLASPRC_JSON` with the full JSON content
+   - **GitLab**: Group → Settings → CI/CD → Variables → add `CLASPRC_JSON` (protected, masked)
+
+4. **Each developer** copies `~/.clasprc.json` from the password manager to their local machine.
+
+### Per-Project Init
+
+Once `~/.clasprc.json` is on your machine, run the init script to create GAS projects and configure CI/CD variables automatically:
+
+```bash
+# GitHub: gh CLI must be authenticated
+./scripts/init.sh --title "My Script"
+
+# GitLab: set GITLAB_TOKEN first
+GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script"
+```
+
+Options:
+
+- `--title "Name"` — GAS project title (default: directory name)
+- `--type standalone|sheets|docs|slides|forms` — GAS project type (default: `standalone`)
+
+The script creates dev/prod GAS projects, deploys initial versions, and sets `CLASP_JSON` + `DEPLOYMENT_ID` on your CI/CD platform.
+
 ## Quick Start
 
 - **GitHub / GitHub Enterprise Server**: [docs/setup-github.md](docs/setup-github.md)
@@ -165,13 +204,13 @@ pnpm run deploy
 
 ### Available Commands
 
-| Command                    | Description                                |
-| -------------------------- | ------------------------------------------ |
+| Command                    | Description                                    |
+| -------------------------- | ---------------------------------------------- |
 | `pnpm run check`           | lint + lint:css + lint:html + typecheck + test |
-| `pnpm run build`           | Bundle TypeScript + copy assets to `dist/` |
-| `pnpm run deploy`          | check → build → deploy to dev              |
-| `pnpm run deploy:prod`     | check → build → deploy to production       |
-| `pnpm run test -- --watch` | Jest in watch mode                         |
+| `pnpm run build`           | Bundle TypeScript + copy assets to `dist/`     |
+| `pnpm run deploy`          | check → build → deploy to dev                  |
+| `pnpm run deploy:prod`     | check → build → deploy to production           |
+| `pnpm run test -- --watch` | Jest in watch mode                             |
 
 ## Keeping Repos in Sync
 
@@ -236,10 +275,10 @@ If your project uses `doGet` or `doPost` as a Web App, add the `webapp` section 
 }
 ```
 
-| Property    | Options                                  |
-| ----------- | ---------------------------------------- |
+| Property    | Options                                          |
+| ----------- | ------------------------------------------------ |
 | `access`    | `MYSELF`, `DOMAIN`, `ANYONE`, `ANYONE_ANONYMOUS` |
-| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`       |
+| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`               |
 
 See the [official documentation](https://developers.google.com/apps-script/manifest/web-app) for details.
 
@@ -256,12 +295,12 @@ pnpm run test -- --watch   # Watch mode
 
 Real projects built with Apps Script Fleet:
 
-| Project | Pattern | Description |
-|---------|---------|-------------|
-| [custom-functions](https://github.com/h13/apps-script-custom-functions) | Custom functions | Google Sheets data validation (email, phone, postal code) |
-| [form-mailer](https://github.com/h13/apps-script-form-mailer) | Web App | Contact form with Gmail notification |
-| [slack-channel-archiver](https://github.com/h13/apps-script-slack-channel-archiver) | Time-driven trigger | Auto-archive inactive Slack channels (public + private) |
-| [slack-notifier](https://github.com/h13/apps-script-slack-notifier) | Time-driven trigger | Spreadsheet new rows to Slack via Bot Token |
+| Project                                                                             | Pattern             | Description                                               |
+| ----------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
+| [custom-functions](https://github.com/h13/apps-script-custom-functions)             | Custom functions    | Google Sheets data validation (email, phone, postal code) |
+| [form-mailer](https://github.com/h13/apps-script-form-mailer)                       | Web App             | Contact form with Gmail notification                      |
+| [slack-channel-archiver](https://github.com/h13/apps-script-slack-channel-archiver) | Time-driven trigger | Auto-archive inactive Slack channels (public + private)   |
+| [slack-notifier](https://github.com/h13/apps-script-slack-notifier)                 | Time-driven trigger | Spreadsheet new rows to Slack via Bot Token               |
 
 Each repo demonstrates the "1 repo = 1 function" pattern with full CI/CD, testing, and deployment.
 

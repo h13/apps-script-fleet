@@ -74,6 +74,45 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 > リッチな UI をクライアントサイドフレームワークで構築する場合は、[Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) が適しています。
 > 組織全体で 5 つ以上の小さな GAS 自動化を管理する場合は、Apps Script Fleet の出番です。
 
+## 組織セットアップ（初回のみ）
+
+チームが Apps Script Fleet を使い始める前に、組織の管理者が clasp の共有認証情報をセットアップします：
+
+1. **clasp にログイン**（CI/CD デプロイに使う Google アカウントで）：
+
+   ```bash
+   npx @google/clasp login
+   ```
+
+   `~/.clasprc.json` が生成されます。
+
+2. **組織のパスワードマネージャーに保存** — `~/.clasprc.json` の内容を共有クレデンシャルとして登録します（例: 「clasp CI/CD — GAS Fleet」）。
+
+3. **`CLASPRC_JSON` を組織レベルの CI/CD シークレットに設定**：
+   - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → `CLASPRC_JSON` を追加（値は JSON 全体）
+   - **GitLab**: グループ → Settings → CI/CD → Variables → `CLASPRC_JSON` を追加（protected, masked）
+
+4. **各開発者**はパスワードマネージャーから `~/.clasprc.json` をローカルマシンにコピーします。
+
+### プロジェクトごとの初期化
+
+`~/.clasprc.json` がローカルにある状態で、init スクリプトを実行すると GAS プロジェクトの作成と CI/CD 変数の設定を自動で行います：
+
+```bash
+# GitHub: gh CLI で認証済みであること
+./scripts/init.sh --title "My Script"
+
+# GitLab: GITLAB_TOKEN を設定してから実行
+GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script"
+```
+
+オプション：
+
+- `--title "名前"` — GAS プロジェクト名（デフォルト: ディレクトリ名）
+- `--type standalone|sheets|docs|slides|forms` — GAS プロジェクトタイプ（デフォルト: `standalone`）
+
+スクリプトは dev/prod の GAS プロジェクトを作成し、初回デプロイを行い、`CLASP_JSON` + `DEPLOYMENT_ID` を CI/CD プラットフォームに設定します。
+
 ## クイックスタート
 
 - **GitHub / GitHub Enterprise Server**: [docs/setup-github.ja.md](docs/setup-github.ja.md)
@@ -167,7 +206,7 @@ pnpm run deploy
 
 | コマンド                   | 説明                                                |
 | -------------------------- | --------------------------------------------------- |
-| `pnpm run check`           | lint + lint:css + lint:html + 型チェック + テスト |
+| `pnpm run check`           | lint + lint:css + lint:html + 型チェック + テスト   |
 | `pnpm run build`           | TypeScript をバンドル + アセットを `dist/` にコピー |
 | `pnpm run deploy`          | check → build → dev にデプロイ                      |
 | `pnpm run deploy:prod`     | check → build → 本番にデプロイ                      |
@@ -236,10 +275,10 @@ pnpm run deploy
 }
 ```
 
-| プロパティ  | 選択肢                                   |
-| ----------- | ---------------------------------------- |
+| プロパティ  | 選択肢                                           |
+| ----------- | ------------------------------------------------ |
 | `access`    | `MYSELF`, `DOMAIN`, `ANYONE`, `ANYONE_ANONYMOUS` |
-| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`       |
+| `executeAs` | `USER_ACCESSING`, `USER_DEPLOYING`               |
 
 詳細は[公式ドキュメント](https://developers.google.com/apps-script/manifest/web-app)を参照してください。
 
@@ -256,12 +295,12 @@ pnpm run test -- --watch   # ウォッチモード
 
 Apps Script Fleet で構築された実プロジェクト:
 
-| プロジェクト | パターン | 説明 |
-|-------------|---------|------|
-| [custom-functions](https://github.com/h13/apps-script-custom-functions) | カスタム関数 | Google Sheets データ検証（メール、電話番号、郵便番号） |
-| [form-mailer](https://github.com/h13/apps-script-form-mailer) | Web App | お問い合わせフォーム + Gmail 通知 |
+| プロジェクト                                                                        | パターン     | 説明                                                                             |
+| ----------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------- |
+| [custom-functions](https://github.com/h13/apps-script-custom-functions)             | カスタム関数 | Google Sheets データ検証（メール、電話番号、郵便番号）                           |
+| [form-mailer](https://github.com/h13/apps-script-form-mailer)                       | Web App      | お問い合わせフォーム + Gmail 通知                                                |
 | [slack-channel-archiver](https://github.com/h13/apps-script-slack-channel-archiver) | 時限トリガー | 非アクティブな Slack チャンネルを自動アーカイブ（パブリック + プライベート対応） |
-| [slack-notifier](https://github.com/h13/apps-script-slack-notifier) | 時限トリガー | スプレッドシートの新規行を Slack Bot Token 経由で通知 |
+| [slack-notifier](https://github.com/h13/apps-script-slack-notifier)                 | 時限トリガー | スプレッドシートの新規行を Slack Bot Token 経由で通知                            |
 
 各リポジトリが「1 リポ = 1 機能」パターンを CI/CD・テスト・デプロイ付きで実演しています。
 
