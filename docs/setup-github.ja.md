@@ -33,18 +33,21 @@ pnpm install
 ```json
 {
   "scriptId": "YOUR_SCRIPT_ID",
+  "projectId": "YOUR_GCP_PROJECT_ID",
   "rootDir": "dist"
 }
 ```
 
+> **`projectId`** は Apps Script に紐づく GCP プロジェクト**番号**です（`"123456789"` のような数字列。`my-project-abc` のようなプロジェクト ID ではない）。Apps Script エディタ → プロジェクトの設定 → Google Cloud Platform（GCP）プロジェクトで確認できます。記載することで GCP プロジェクトの紐づけが宣言的・再現可能になります。省略時は clasp がスクリプトの既存 GCP プロジェクトを使用します。
+
 ### 3. GitHub Environments の設定
 
-| Environment   | Secret / Variable         | 値                                        |
-| ------------- | ------------------------- | ----------------------------------------- |
-| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","rootDir":"dist"}`  |
-| `development` | Variable: `DEPLOYMENT_ID` | dev のデプロイメント ID                   |
-| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` |
-| `production`  | Variable: `DEPLOYMENT_ID` | prod のデプロイメント ID                  |
+| Environment   | Secret / Variable         | 値                                                                 |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     |
+| `development` | Variable: `DEPLOYMENT_ID` | dev のデプロイメント ID                                            |
+| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    |
+| `production`  | Variable: `DEPLOYMENT_ID` | prod のデプロイメント ID                                           |
 
 > **GCP プロジェクト統合時**: `CLASP_JSON` に `"projectId":"プロジェクト番号"` を追加します（例: `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`）。`init.sh --gcp-project` 使用時は自動設定されます。
 

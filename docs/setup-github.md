@@ -33,18 +33,21 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 ```json
 {
   "scriptId": "YOUR_SCRIPT_ID",
+  "projectId": "YOUR_GCP_PROJECT_ID",
   "rootDir": "dist"
 }
 ```
 
+> **`projectId`** is the GCP project **number** associated with your Apps Script (a numeric string like `"123456789"`, not the alphanumeric project ID like `my-project-abc`). Find it in Apps Script editor → Project Settings → Google Cloud Platform (GCP) Project. Including it makes the GCP project association declarative and reproducible. If omitted, clasp uses the script's existing GCP project.
+
 ### 3. Configure GitHub environments
 
-| Environment   | Secret / Variable         | Value                                     |
-| ------------- | ------------------------- | ----------------------------------------- |
-| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","rootDir":"dist"}`  |
-| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                    |
-| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` |
-| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                   |
+| Environment   | Secret / Variable         | Value                                                              |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     |
+| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                                             |
+| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    |
+| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                                            |
 
 > **With GCP project**: Add `"projectId":"YOUR_PROJECT_NUMBER"` to `CLASP_JSON` (e.g., `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`). This is set automatically when using `init.sh --gcp-project`.
 
