@@ -83,20 +83,23 @@ pnpm install
 ```json
 {
   "scriptId": "YOUR_SCRIPT_ID",
+  "projectId": "YOUR_GCP_PROJECT_ID",
   "rootDir": "dist"
 }
 ```
+
+> **`projectId`** は Apps Script に紐づく GCP プロジェクト番号（文字列 ID ではなく数値）です。Apps Script エディタ → プロジェクトの設定 → Google Cloud Platform（GCP）プロジェクトで確認できます。記載することで GCP プロジェクトの紐づけが宣言的・再現可能になります。省略時は clasp がスクリプトの既存 GCP プロジェクトを使用します。
 
 ### 3. CI/CD Variables の設定
 
 Settings → CI/CD → Variables で以下を追加：
 
-| 変数            | Environment scope | 値                                        | オプション |
-| --------------- | ----------------- | ----------------------------------------- | ---------- |
-| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","rootDir":"dist"}`  | Masked     |
-| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` | Masked     |
-| `DEPLOYMENT_ID` | `development`     | dev のデプロイメント ID                   |            |
-| `DEPLOYMENT_ID` | `production`      | prod のデプロイメント ID                  |            |
+| 変数            | Environment scope | 値                                                                 | オプション |
+| --------------- | ----------------- | ------------------------------------------------------------------ | ---------- |
+| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     | Masked     |
+| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    | Masked     |
+| `DEPLOYMENT_ID` | `development`     | dev のデプロイメント ID                                            |            |
+| `DEPLOYMENT_ID` | `production`      | prod のデプロイメント ID                                           |            |
 
 ### 4. Template Sync の設定
 

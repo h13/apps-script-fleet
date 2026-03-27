@@ -33,18 +33,21 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 ```json
 {
   "scriptId": "YOUR_SCRIPT_ID",
+  "projectId": "YOUR_GCP_PROJECT_ID",
   "rootDir": "dist"
 }
 ```
 
+> **`projectId`** is the GCP project number (not the string ID) associated with your Apps Script. Find it in Apps Script editor → Project Settings → Google Cloud Platform (GCP) Project. Including it makes the GCP project association declarative and reproducible. If omitted, clasp uses the script's existing GCP project.
+
 ### 3. Configure GitHub environments
 
-| Environment   | Secret / Variable         | Value                                     |
-| ------------- | ------------------------- | ----------------------------------------- |
-| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","rootDir":"dist"}`  |
-| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                    |
-| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` |
-| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                   |
+| Environment   | Secret / Variable         | Value                                                              |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     |
+| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                                             |
+| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    |
+| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                                            |
 
 ### 4. Verify and deploy
 

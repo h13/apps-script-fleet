@@ -83,20 +83,23 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 ```json
 {
   "scriptId": "YOUR_SCRIPT_ID",
+  "projectId": "YOUR_GCP_PROJECT_ID",
   "rootDir": "dist"
 }
 ```
+
+> **`projectId`** is the GCP project number (not the string ID) associated with your Apps Script. Find it in Apps Script editor → Project Settings → Google Cloud Platform (GCP) Project. Including it makes the GCP project association declarative and reproducible. If omitted, clasp uses the script's existing GCP project.
 
 ### 3. Configure CI/CD Variables
 
 Go to Settings → CI/CD → Variables and add:
 
-| Variable        | Environment scope | Value                                     | Options |
-| --------------- | ----------------- | ----------------------------------------- | ------- |
-| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","rootDir":"dist"}`  | Masked  |
-| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` | Masked  |
-| `DEPLOYMENT_ID` | `development`     | Your dev deployment ID                    |         |
-| `DEPLOYMENT_ID` | `production`      | Your prod deployment ID                   |         |
+| Variable        | Environment scope | Value                                                              | Options |
+| --------------- | ----------------- | ------------------------------------------------------------------ | ------- |
+| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     | Masked  |
+| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    | Masked  |
+| `DEPLOYMENT_ID` | `development`     | Your dev deployment ID                                             |         |
+| `DEPLOYMENT_ID` | `production`      | Your prod deployment ID                                            |         |
 
 ### 4. Set up Template Sync
 
