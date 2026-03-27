@@ -30,6 +30,9 @@ renovate.json
 .gitlab-ci.yml
 CLAUDE.md
 
+# Scripts
+scripts/
+
 # Documentation
 docs/
 README.md

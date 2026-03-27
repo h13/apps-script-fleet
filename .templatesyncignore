@@ -41,6 +41,9 @@
 :!docs/setup-gitlab.md
 :!docs/setup-gitlab.ja.md
 
+# Scripts
+:!scripts/init.sh
+
 # Meta
 :!.templatesyncignore
 :!.claspignore
