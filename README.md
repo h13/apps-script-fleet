@@ -94,24 +94,50 @@ Before your team can use Apps Script Fleet, an org admin needs to set up shared 
 
 4. **Each developer** copies `~/.clasprc.json` from the password manager to their local machine.
 
+### GCP Project Setup (Optional, Recommended)
+
+Binding all GAS projects to a single standard GCP project enables centralized Cloud Logging, Error Reporting, API usage monitoring, and `clasp run` for CI/CD property injection.
+
+**Prerequisites:**
+
+1. **Create a standard GCP project** (or use an existing one) in [Google Cloud Console](https://console.cloud.google.com/)
+2. **Enable the Apps Script API** on the project: [APIs & Services → Enable APIs](https://console.cloud.google.com/apis/library/script.googleapis.com)
+3. **Configure the OAuth consent screen**: [APIs & Services → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) — set to "Internal" for Workspace organizations
+4. **Note the project number** (not the project ID): [Project Settings](https://console.cloud.google.com/iam-admin/settings) → Project number
+5. **Set `GCP_PROJECT_NUMBER` as an org-level CI/CD variable**:
+   - **GitHub**: Organization variable → `GCP_PROJECT_NUMBER`
+   - **GitLab**: Group → Settings → CI/CD → Variables → `GCP_PROJECT_NUMBER`
+
 ### Per-Project Init
 
 Once `~/.clasprc.json` is on your machine, run the init script to create GAS projects and configure CI/CD variables automatically:
 
 ```bash
 # GitHub: gh CLI must be authenticated
-./scripts/init.sh --title "My Script"
+./scripts/init.sh --title "My Script" --gcp-project 123456789
 
 # GitLab: set GITLAB_TOKEN first
-GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script"
+GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script" --gcp-project 123456789
 ```
 
 Options:
 
 - `--title "Name"` — GAS project title (default: directory name)
 - `--type standalone|sheets|docs|slides|forms` — GAS project type (default: `standalone`)
+- `--gcp-project <NUMBER>` — GCP project number to bind (enables Cloud Logging + `clasp run`)
 
-The script creates dev/prod GAS projects, deploys initial versions, and sets `CLASP_JSON` + `DEPLOYMENT_ID` on your CI/CD platform.
+The script creates dev/prod GAS projects, deploys initial versions, and sets `CLASP_JSON` + `DEPLOYMENT_ID` on your CI/CD platform. When `--gcp-project` is specified, the projects are bound to the GCP project and `GCP_PROJECT_NUMBER` is set as a CI/CD variable.
+
+### Script Properties via CI/CD
+
+When GCP project integration is configured, you can automatically inject Script Properties during deployment:
+
+1. **Set `SCRIPT_PROPERTIES`** as a CI/CD secret (JSON string per environment):
+   ```json
+   {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+   ```
+2. Properties are injected automatically after `clasp deploy` when both `GCP_PROJECT_NUMBER` and `SCRIPT_PROPERTIES` are set
+3. See `.github/hooks/post-deploy.sh.example` or `.gitlab/post-deploy.yml.example` for hook-based alternatives
 
 ## Quick Start
 

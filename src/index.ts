@@ -1,4 +1,5 @@
 import { getGreeting } from "./greeting.js";
+import { setScriptProperties } from "./setProperties.js";
 
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
   return HtmlService.createHtmlOutputFromFile("app")

@@ -9,10 +9,11 @@ set -euo pipefail
 #   - Node.js + pnpm installed
 #
 # Usage:
-#   ./scripts/init.sh [--title "Project Name"] [--type standalone|sheets|docs|slides|forms]
+#   ./scripts/init.sh [--title "Project Name"] [--type standalone|sheets|docs|slides|forms] [--gcp-project <PROJECT_NUMBER>]
 
 TITLE=""
 GAS_TYPE="standalone"
+GCP_PROJECT=""
 VALID_TYPES="standalone sheets docs slides forms"
 
 while [[ $# -gt 0 ]]; do
@@ -23,6 +24,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --type)
       GAS_TYPE="$2"
+      shift 2
+      ;;
+    --gcp-project)
+      GCP_PROJECT="$2"
       shift 2
       ;;
     *)
@@ -135,8 +140,12 @@ setup_github() {
   local dev_script_id="$1" dev_deployment_id="$2"
   local prod_script_id="$3" prod_deployment_id="$4"
 
-  local dev_clasp="{\"scriptId\":\"${dev_script_id}\",\"rootDir\":\"dist\"}"
-  local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"}"
+  local project_id_field=""
+  if [[ -n "$GCP_PROJECT" ]]; then
+    project_id_field=",\"projectId\":\"${GCP_PROJECT}\""
+  fi
+  local dev_clasp="{\"scriptId\":\"${dev_script_id}\",\"rootDir\":\"dist\"${project_id_field}}"
+  local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"${project_id_field}}"
 
   echo "Setting GitHub secrets/variables..."
   gh_ensure_environment "development"
@@ -145,6 +154,11 @@ setup_github() {
   gh_set_variable "DEPLOYMENT_ID" "$dev_deployment_id" "development"
   gh_set_secret "CLASP_JSON" "$prod_clasp" "production"
   gh_set_variable "DEPLOYMENT_ID" "$prod_deployment_id" "production"
+
+  if [[ -n "$GCP_PROJECT" ]]; then
+    gh_set_variable "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "development"
+    gh_set_variable "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "production"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -203,8 +217,12 @@ setup_gitlab() {
 
   echo "Setting GitLab CI/CD variables (project ID: ${project_id})..."
 
-  local dev_clasp="{\"scriptId\":\"${dev_script_id}\",\"rootDir\":\"dist\"}"
-  local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"}"
+  local project_id_field=""
+  if [[ -n "$GCP_PROJECT" ]]; then
+    project_id_field=",\"projectId\":\"${GCP_PROJECT}\""
+  fi
+  local dev_clasp="{\"scriptId\":\"${dev_script_id}\",\"rootDir\":\"dist\"${project_id_field}}"
+  local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"${project_id_field}}"
 
   # dev: protected=false (dev branch is typically not protected)
   gl_set_variable "$project_id" "CLASP_JSON" "$dev_clasp" "development" "false"
@@ -212,6 +230,11 @@ setup_gitlab() {
   # prod: protected=true
   gl_set_variable "$project_id" "CLASP_JSON" "$prod_clasp" "production" "true"
   gl_set_variable "$project_id" "DEPLOYMENT_ID" "$prod_deployment_id" "production" "true"
+
+  if [[ -n "$GCP_PROJECT" ]]; then
+    gl_set_variable "$project_id" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "development" "false"
+    gl_set_variable "$project_id" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "production" "true"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -230,7 +253,11 @@ clasp_create_and_deploy() {
 
   echo "Creating GAS project: ${full_title}..."
   rm -f .clasp.json
-  pnpm exec clasp create --title "$full_title" --type "$GAS_TYPE" --rootDir dist 2>&1
+  local clasp_args=(create --title "$full_title" --type "$GAS_TYPE" --rootDir dist)
+  if [[ -n "$GCP_PROJECT" ]]; then
+    clasp_args+=(--parentId "$GCP_PROJECT")
+  fi
+  pnpm exec clasp "${clasp_args[@]}" 2>&1
 
   [[ -f .clasp.json ]] || die "clasp create failed — .clasp.json not generated."
 
@@ -284,6 +311,9 @@ PLATFORM=$(detect_platform)
 echo "Platform: ${PLATFORM}"
 echo "Title: ${TITLE}"
 echo "Type: ${GAS_TYPE}"
+if [[ -n "$GCP_PROJECT" ]]; then
+  echo "GCP Project: ${GCP_PROJECT}"
+fi
 echo ""
 
 # Create dev and prod projects
@@ -307,3 +337,10 @@ echo "Done! CI/CD variables are configured."
 echo ""
 echo "  dev  script: https://script.google.com/d/${DEV_SCRIPT_ID}/edit"
 echo "  prod script: https://script.google.com/d/${PROD_SCRIPT_ID}/edit"
+if [[ -n "$GCP_PROJECT" ]]; then
+  echo ""
+  echo "  GCP project: https://console.cloud.google.com/home/dashboard?project=${GCP_PROJECT}"
+  echo ""
+  echo "  clasp run is enabled. To set script properties:"
+  echo "    ./scripts/set-properties.sh --json '{\"KEY\":\"value\"}'"
+fi

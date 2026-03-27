@@ -98,6 +98,8 @@ Go to Settings → CI/CD → Variables and add:
 | `DEPLOYMENT_ID` | `development`     | Your dev deployment ID                    |         |
 | `DEPLOYMENT_ID` | `production`      | Your prod deployment ID                   |         |
 
+> **With GCP project**: Add `"projectId":"YOUR_PROJECT_NUMBER"` to `CLASP_JSON` (e.g., `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`). This is set automatically when using `init.sh --gcp-project`.
+
 ### 4. Set up Template Sync
 
 1. Create a **Project Access Token** (Settings → Access Tokens) with `write_repository` scope

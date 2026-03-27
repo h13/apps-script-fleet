@@ -13,6 +13,10 @@
     - echo "$CLASP_JSON" > .clasp.json
     - pnpm exec clasp push -f
     - pnpm exec clasp deploy -i "$DEPLOYMENT_ID" --description "GitLab CD from $CI_COMMIT_REF_NAME@$CI_COMMIT_SHORT_SHA"
+    - |
+      if [[ -n "${GCP_PROJECT_NUMBER:-}" && -n "${SCRIPT_PROPERTIES:-}" ]]; then
+        ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
+      fi
   cache:
     key: pnpm-$CI_COMMIT_REF_SLUG
     paths:

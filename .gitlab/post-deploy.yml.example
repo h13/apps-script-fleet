@@ -1,0 +1,24 @@
+# Post-deploy hook example: Set script properties after deployment
+#
+# To use:
+#   1. Copy this file to .gitlab/post-deploy.yml
+#   2. Set SCRIPT_PROPERTIES as a CI/CD variable (JSON string, per environment)
+#      e.g. {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+#   3. Ensure GCP_PROJECT_NUMBER is set as a CI/CD variable
+#
+# This job runs automatically after every CD deployment.
+
+post_deploy:
+  stage: deploy
+  image: node:24@sha256:3a09aa6354567619221ef6c45a5051b671f953f0a1924d1f819ffb236e520e6b
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - echo "$CLASPRC_JSON" > ~/.clasprc.json
+    - echo "$CLASP_JSON" > .clasp.json
+    - ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
+  rules:
+    - if: $SCRIPT_PROPERTIES && $GCP_PROJECT_NUMBER
+      when: on_success

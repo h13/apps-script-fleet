@@ -46,6 +46,8 @@ pnpm install
 | `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` |
 | `production`  | Variable: `DEPLOYMENT_ID` | prod のデプロイメント ID                  |
 
+> **GCP プロジェクト統合時**: `CLASP_JSON` に `"projectId":"プロジェクト番号"` を追加します（例: `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`）。`init.sh --gcp-project` 使用時は自動設定されます。
+
 ### 4. 確認とデプロイ
 
 ```

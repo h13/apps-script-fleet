@@ -43,6 +43,11 @@
 
 # Scripts
 :!scripts/init.sh
+:!scripts/set-properties.sh
+
+# Hook examples
+:!.github/hooks/post-deploy.sh.example
+:!.gitlab/post-deploy.yml.example
 
 # Meta
 :!.templatesyncignore

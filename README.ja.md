@@ -94,24 +94,50 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 4. **各開発者**はパスワードマネージャーから `~/.clasprc.json` をローカルマシンにコピーします。
 
+### GCP プロジェクトの設定（任意、推奨）
+
+全 GAS プロジェクトを 1 つの標準 GCP プロジェクトに紐付けることで、Cloud Logging / Error Reporting / API 使用量の一元管理と、CI/CD からの `clasp run` による Script Properties 自動注入が可能になります。
+
+**前提条件：**
+
+1. **標準 GCP プロジェクトを作成**（または既存のものを使用）: [Google Cloud Console](https://console.cloud.google.com/)
+2. **Apps Script API を有効化**: [API とサービス → API を有効化](https://console.cloud.google.com/apis/library/script.googleapis.com)
+3. **OAuth 同意画面を設定**: [API とサービス → OAuth 同意画面](https://console.cloud.google.com/apis/credentials/consent) — Workspace 組織は「内部」を選択
+4. **プロジェクト番号を確認**（プロジェクト ID ではなく番号）: [プロジェクト設定](https://console.cloud.google.com/iam-admin/settings) → プロジェクト番号
+5. **`GCP_PROJECT_NUMBER` を組織レベルの CI/CD 変数に設定**：
+   - **GitHub**: Organization variable → `GCP_PROJECT_NUMBER`
+   - **GitLab**: グループ → Settings → CI/CD → Variables → `GCP_PROJECT_NUMBER`
+
 ### プロジェクトごとの初期化
 
 `~/.clasprc.json` がローカルにある状態で、init スクリプトを実行すると GAS プロジェクトの作成と CI/CD 変数の設定を自動で行います：
 
 ```bash
 # GitHub: gh CLI で認証済みであること
-./scripts/init.sh --title "My Script"
+./scripts/init.sh --title "My Script" --gcp-project 123456789
 
 # GitLab: GITLAB_TOKEN を設定してから実行
-GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script"
+GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script" --gcp-project 123456789
 ```
 
 オプション：
 
 - `--title "名前"` — GAS プロジェクト名（デフォルト: ディレクトリ名）
 - `--type standalone|sheets|docs|slides|forms` — GAS プロジェクトタイプ（デフォルト: `standalone`）
+- `--gcp-project <番号>` — 紐付ける GCP プロジェクト番号（Cloud Logging + `clasp run` が有効に）
 
-スクリプトは dev/prod の GAS プロジェクトを作成し、初回デプロイを行い、`CLASP_JSON` + `DEPLOYMENT_ID` を CI/CD プラットフォームに設定します。
+スクリプトは dev/prod の GAS プロジェクトを作成し、初回デプロイを行い、`CLASP_JSON` + `DEPLOYMENT_ID` を CI/CD プラットフォームに設定します。`--gcp-project` を指定した場合、GAS プロジェクトが GCP プロジェクトに紐付けられ、`GCP_PROJECT_NUMBER` が CI/CD 変数として設定されます。
+
+### CI/CD 経由の Script Properties 注入
+
+GCP プロジェクト統合が設定されている場合、デプロイ時に Script Properties を自動注入できます：
+
+1. **`SCRIPT_PROPERTIES`** を CI/CD シークレットとして設定（環境ごとの JSON 文字列）：
+   ```json
+   {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+   ```
+2. `GCP_PROJECT_NUMBER` と `SCRIPT_PROPERTIES` の両方が設定されている場合、`clasp deploy` 後に自動的にプロパティが注入されます
+3. hook ベースの代替方法は `.github/hooks/post-deploy.sh.example` または `.gitlab/post-deploy.yml.example` を参照
 
 ## クイックスタート
 

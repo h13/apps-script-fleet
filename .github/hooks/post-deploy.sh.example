@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Post-deploy hook example: Set script properties after deployment
+#
+# To use:
+#   1. Copy this file to .github/hooks/post-deploy.sh
+#   2. Set SCRIPT_PROPERTIES as a GitHub environment secret (JSON string)
+#      e.g. {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+#   3. Ensure GCP_PROJECT_NUMBER is set as an environment variable
+#
+# This hook runs automatically after every CD deployment.
+
+if [[ "$DEPLOY_STATUS" != "success" ]]; then
+  echo "Deploy failed — skipping script properties update."
+  exit 0
+fi
+
+if [[ -z "${SCRIPT_PROPERTIES:-}" ]]; then
+  echo "SCRIPT_PROPERTIES not set — skipping."
+  exit 0
+fi
+
+echo "Injecting script properties for ${DEPLOY_ENV}..."
+./scripts/set-properties.sh --env SCRIPT_PROPERTIES
