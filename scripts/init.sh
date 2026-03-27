@@ -46,8 +46,7 @@ require_cmd() {
 }
 
 json_value() {
-  local file="$1" key="$2"
-  node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('$file','utf8'))['$key'])"
+  node -e "process.stdout.write(String(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))[process.argv[2]]))" "$1" "$2"
 }
 
 # Extract host from git remote URL
@@ -122,6 +121,14 @@ gh_set_variable() {
   echo "  Set variable: $name (env=$env)"
 }
 
+gh_ensure_environment() {
+  local env="$1"
+  local repo
+  repo=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+  # Create environment if it doesn't exist (idempotent PUT)
+  gh api -X PUT "repos/${repo}/environments/${env}" --silent 2>/dev/null || true
+}
+
 setup_github() {
   require_cmd gh
 
@@ -132,6 +139,8 @@ setup_github() {
   local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"}"
 
   echo "Setting GitHub secrets/variables..."
+  gh_ensure_environment "development"
+  gh_ensure_environment "production"
   gh_set_secret "CLASP_JSON" "$dev_clasp" "development"
   gh_set_variable "DEPLOYMENT_ID" "$dev_deployment_id" "development"
   gh_set_secret "CLASP_JSON" "$prod_clasp" "production"
@@ -148,7 +157,7 @@ gl_project_id() {
   encoded_path="${path//\//%2F}"
   project_id=$(curl -sf --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
     "https://${REMOTE_HOST}/api/v4/projects/${encoded_path}" |
-    node -e "process.stdin.on('data',d=>process.stdout.write(String(JSON.parse(d).id)))")
+    node -e "let b='';process.stdin.on('data',d=>b+=d);process.stdin.on('end',()=>process.stdout.write(String(JSON.parse(b).id)))")
   echo "$project_id"
 }
 
