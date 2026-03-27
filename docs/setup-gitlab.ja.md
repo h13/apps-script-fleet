@@ -88,7 +88,7 @@ pnpm install
 }
 ```
 
-> **`projectId`** は Apps Script に紐づく GCP プロジェクト番号（文字列 ID ではなく数値）です。Apps Script エディタ → プロジェクトの設定 → Google Cloud Platform（GCP）プロジェクトで確認できます。記載することで GCP プロジェクトの紐づけが宣言的・再現可能になります。省略時は clasp がスクリプトの既存 GCP プロジェクトを使用します。
+> **`projectId`** は Apps Script に紐づく GCP プロジェクト**番号**です（`"123456789"` のような数字列。`my-project-abc` のようなプロジェクト ID ではない）。Apps Script エディタ → プロジェクトの設定 → Google Cloud Platform（GCP）プロジェクトで確認できます。記載することで GCP プロジェクトの紐づけが宣言的・再現可能になります。省略時は clasp がスクリプトの既存 GCP プロジェクトを使用します。
 
 ### 3. CI/CD Variables の設定
 

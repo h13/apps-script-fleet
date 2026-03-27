@@ -88,7 +88,7 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 }
 ```
 
-> **`projectId`** is the GCP project number (not the string ID) associated with your Apps Script. Find it in Apps Script editor → Project Settings → Google Cloud Platform (GCP) Project. Including it makes the GCP project association declarative and reproducible. If omitted, clasp uses the script's existing GCP project.
+> **`projectId`** is the GCP project **number** associated with your Apps Script (a numeric string like `"123456789"`, not the alphanumeric project ID like `my-project-abc`). Find it in Apps Script editor → Project Settings → Google Cloud Platform (GCP) Project. Including it makes the GCP project association declarative and reproducible. If omitted, clasp uses the script's existing GCP project.
 
 ### 3. Configure CI/CD Variables
 
