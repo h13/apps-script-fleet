@@ -34,15 +34,7 @@ template_sync:
       INCLUDE=""
       SYNCIGNORE=$(git show template/main:.templatesyncignore 2>/dev/null || cat .templatesyncignore 2>/dev/null || true)
       if [ -n "$SYNCIGNORE" ]; then
-        while IFS= read -r line || [ -n "$line" ]; do
-          line=$(echo "$line" | sed 's/#.*//' | xargs)
-          [ -z "$line" ] && continue
-          case "$line" in
-            :!*) INCLUDE="$INCLUDE ${line#:!}" ;;
-          esac
-        done <<EOF
-$SYNCIGNORE
-EOF
+        INCLUDE=$(echo "$SYNCIGNORE" | sed 's/#.*//' | grep -E '^\s*:!' | sed 's/^\s*:!//' | xargs)
       fi
 
       if [ -z "$INCLUDE" ]; then
