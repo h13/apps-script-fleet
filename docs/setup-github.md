@@ -46,6 +46,8 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 | `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","rootDir":"dist"}` |
 | `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                   |
 
+> **With GCP project**: Add `"projectId":"YOUR_PROJECT_NUMBER"` to `CLASP_JSON` (e.g., `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`). This is set automatically when using `init.sh --gcp-project`.
+
 ### 4. Verify and deploy
 
 ```

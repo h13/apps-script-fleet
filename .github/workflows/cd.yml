@@ -51,6 +51,12 @@ jobs:
       - name: Deploy new version
         run: pnpm exec clasp deploy -i "${{ vars.DEPLOYMENT_ID }}" --description "CD deploy from ${{ github.event.workflow_run.head_branch }}@${{ github.event.workflow_run.head_sha }}"
 
+      - name: Set script properties
+        if: vars.GCP_PROJECT_NUMBER != '' && secrets.SCRIPT_PROPERTIES != ''
+        run: ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
+        env:
+          SCRIPT_PROPERTIES: ${{ secrets.SCRIPT_PROPERTIES }}
+
       - name: Post-deploy hook
         if: always() && hashFiles('.github/hooks/post-deploy.sh') != ''
         run: bash .github/hooks/post-deploy.sh

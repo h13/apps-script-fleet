@@ -6,7 +6,7 @@
   "moduleNameMapper": {
     "(.+)\\.js": "$1"
   },
-  "collectCoverageFrom": ["src/**/*.ts", "!src/index.ts"],
+  "collectCoverageFrom": ["src/**/*.ts", "!src/index.ts", "!src/setProperties.ts"],
   "coverageThreshold": {
     "global": {
       "branches": 80,

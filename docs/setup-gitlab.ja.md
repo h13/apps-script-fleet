@@ -98,6 +98,8 @@ Settings → CI/CD → Variables で以下を追加：
 | `DEPLOYMENT_ID` | `development`     | dev のデプロイメント ID                   |            |
 | `DEPLOYMENT_ID` | `production`      | prod のデプロイメント ID                  |            |
 
+> **GCP プロジェクト統合時**: `CLASP_JSON` に `"projectId":"プロジェクト番号"` を追加します（例: `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`）。`init.sh --gcp-project` 使用時は自動設定されます。
+
 ### 4. Template Sync の設定
 
 1. **Project Access Token** を作成（Settings → Access Tokens、`write_repository` スコープ）
