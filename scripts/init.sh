@@ -13,6 +13,7 @@ set -euo pipefail
 
 TITLE=""
 GAS_TYPE="standalone"
+VALID_TYPES="standalone sheets docs slides forms"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -44,20 +45,18 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "$1 is required but not installed."
 }
 
-extract_script_id() {
-  local file="$1"
-  python3 -c "import sys,json; print(json.load(open('$file'))['scriptId'])"
+json_value() {
+  local file="$1" key="$2"
+  node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('$file','utf8'))['$key'])"
 }
 
 # Extract host from git remote URL
 extract_host() {
   local url="$1"
   if [[ "$url" == git@* ]]; then
-    # git@host:path → host
     local without_prefix="${url#git@}"
     echo "${without_prefix%%:*}"
   else
-    # https://host/path → host
     local without_scheme="${url#*://}"
     echo "${without_scheme%%/*}"
   fi
@@ -73,24 +72,36 @@ extract_path() {
     local without_scheme="${url#*://}"
     path="${without_scheme#*/}"
   fi
-  # Remove .git suffix
   echo "${path%.git}"
+}
+
+validate_type() {
+  local type="$1"
+  for valid in $VALID_TYPES; do
+    [[ "$type" == "$valid" ]] && return 0
+  done
+  die "Invalid --type '${type}'. Must be one of: ${VALID_TYPES}"
 }
 
 # ---------------------------------------------------------------------------
 # Detect platform from git remote
 # ---------------------------------------------------------------------------
 
-detect_platform() {
-  local remote_url
-  remote_url=$(git remote get-url origin 2>/dev/null) || die "No git remote 'origin' found."
+REMOTE_URL=""
+REMOTE_HOST=""
 
-  if echo "$remote_url" | grep -q "github"; then
+init_remote() {
+  REMOTE_URL=$(git remote get-url origin 2>/dev/null) || die "No git remote 'origin' found."
+  REMOTE_HOST=$(extract_host "$REMOTE_URL")
+}
+
+detect_platform() {
+  if echo "$REMOTE_URL" | grep -q "github"; then
     echo "github"
-  elif echo "$remote_url" | grep -q "gitlab"; then
+  elif echo "$REMOTE_URL" | grep -q "gitlab"; then
     echo "gitlab"
   else
-    die "Cannot detect platform from remote URL: $remote_url"
+    die "Cannot detect platform from remote URL: $REMOTE_URL"
   fi
 }
 
@@ -99,28 +110,32 @@ detect_platform() {
 # ---------------------------------------------------------------------------
 
 gh_set_secret() {
-  local name="$1" value="$2"
-  echo "$value" | gh secret set "$name"
-  echo "  Set secret: $name"
+  local name="$1" value="$2" env="$3"
+  echo "$value" | gh secret set "$name" -e "$env"
+  echo "  Set secret: $name (env=$env)"
 }
 
 gh_set_variable() {
-  local name="$1" value="$2"
-  # gh variable set fails if already exists; delete first (ignore error)
-  gh variable delete "$name" 2>/dev/null || true
-  gh variable set "$name" --body "$value"
-  echo "  Set variable: $name"
+  local name="$1" value="$2" env="$3"
+  gh variable delete "$name" -e "$env" 2>/dev/null || true
+  gh variable set "$name" --body "$value" -e "$env"
+  echo "  Set variable: $name (env=$env)"
 }
 
 setup_github() {
   require_cmd gh
 
-  local script_id="$1" deployment_id="$2"
-  local clasp_json="{\"scriptId\":\"${script_id}\",\"rootDir\":\"dist\"}"
+  local dev_script_id="$1" dev_deployment_id="$2"
+  local prod_script_id="$3" prod_deployment_id="$4"
+
+  local dev_clasp="{\"scriptId\":\"${dev_script_id}\",\"rootDir\":\"dist\"}"
+  local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"}"
 
   echo "Setting GitHub secrets/variables..."
-  gh_set_secret "CLASP_JSON" "$clasp_json"
-  gh_set_variable "DEPLOYMENT_ID" "$deployment_id"
+  gh_set_secret "CLASP_JSON" "$dev_clasp" "development"
+  gh_set_variable "DEPLOYMENT_ID" "$dev_deployment_id" "development"
+  gh_set_secret "CLASP_JSON" "$prod_clasp" "production"
+  gh_set_variable "DEPLOYMENT_ID" "$prod_deployment_id" "production"
 }
 
 # ---------------------------------------------------------------------------
@@ -128,29 +143,18 @@ setup_github() {
 # ---------------------------------------------------------------------------
 
 gl_project_id() {
-  local remote_url
-  remote_url=$(git remote get-url origin)
-  local host path encoded_path project_id
-  host=$(extract_host "$remote_url")
-  path=$(extract_path "$remote_url")
+  local path encoded_path project_id
+  path=$(extract_path "$REMOTE_URL")
   encoded_path="${path//\//%2F}"
   project_id=$(curl -sf --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-    "https://${host}/api/v4/projects/${encoded_path}" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+    "https://${REMOTE_HOST}/api/v4/projects/${encoded_path}" |
+    node -e "process.stdin.on('data',d=>process.stdout.write(String(JSON.parse(d).id)))")
   echo "$project_id"
-}
-
-gl_api_host() {
-  local remote_url
-  remote_url=$(git remote get-url origin)
-  extract_host "$remote_url"
 }
 
 gl_set_variable() {
   local project_id="$1" key="$2" value="$3" env_scope="$4" protected="$5"
-  local host
-  host=$(gl_api_host)
 
-  # Try create, if exists then update
   local http_code
   http_code=$(curl -s -o /dev/null -w "%{http_code}" \
     --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
@@ -160,15 +164,22 @@ gl_set_variable() {
     --form "environment_scope=${env_scope}" \
     --form "protected=${protected}" \
     --form "masked=false" \
-    "https://${host}/api/v4/projects/${project_id}/variables")
+    "https://${REMOTE_HOST}/api/v4/projects/${project_id}/variables")
 
-  if [[ "$http_code" == "400" ]]; then
-    curl -sf \
+  if [[ "$http_code" == "201" ]]; then
+    : # created successfully
+  elif [[ "$http_code" == "400" ]]; then
+    # Already exists — update
+    local update_code
+    update_code=$(curl -s -o /dev/null -w "%{http_code}" \
       --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
       --request PUT \
       --form "value=${value}" \
       --form "protected=${protected}" \
-      "https://${host}/api/v4/projects/${project_id}/variables/${key}?filter[environment_scope]=${env_scope}" >/dev/null
+      "https://${REMOTE_HOST}/api/v4/projects/${project_id}/variables/${key}?filter[environment_scope]=${env_scope}")
+    [[ "$update_code" == "200" ]] || die "Failed to update ${key} (${env_scope}): HTTP ${update_code}"
+  else
+    die "Failed to create ${key} (${env_scope}): HTTP ${http_code}"
   fi
   echo "  Set ${key} (${env_scope}, protected=${protected})"
 }
@@ -198,7 +209,7 @@ setup_gitlab() {
 # clasp operations
 # ---------------------------------------------------------------------------
 
-# Global variables set by clasp_create_and_deploy
+# Results from clasp_create_and_deploy (set via global variables)
 DEV_SCRIPT_ID=""
 DEV_DEPLOYMENT_ID=""
 PROD_SCRIPT_ID=""
@@ -215,7 +226,7 @@ clasp_create_and_deploy() {
   [[ -f .clasp.json ]] || die "clasp create failed — .clasp.json not generated."
 
   local script_id
-  script_id=$(extract_script_id .clasp.json)
+  script_id=$(json_value .clasp.json scriptId)
   echo "  Script ID: ${script_id}"
 
   # Ensure dist/ has appsscript.json for push
@@ -235,9 +246,10 @@ clasp_create_and_deploy() {
   echo "  Deployment ID: ${deployment_id}"
 
   # Set global variables for the caller
-  local upper_label="${env_label^^}"
-  declare -g "${upper_label}_SCRIPT_ID=${script_id}"
-  declare -g "${upper_label}_DEPLOYMENT_ID=${deployment_id}"
+  local upper_label
+  upper_label=$(echo "$env_label" | tr '[:lower:]' '[:upper:]')
+  eval "${upper_label}_SCRIPT_ID='${script_id}'"
+  eval "${upper_label}_DEPLOYMENT_ID='${deployment_id}'"
 }
 
 # ---------------------------------------------------------------------------
@@ -250,13 +262,15 @@ echo ""
 # Checks
 [[ -f "$HOME/.clasprc.json" ]] || die "$HOME/.clasprc.json not found. Copy it from your organization's password manager."
 require_cmd pnpm
-require_cmd python3
+require_cmd node
+validate_type "$GAS_TYPE"
 
 # Default title from directory name
 if [[ -z "$TITLE" ]]; then
   TITLE=$(basename "$(pwd)")
 fi
 
+init_remote
 PLATFORM=$(detect_platform)
 echo "Platform: ${PLATFORM}"
 echo "Title: ${TITLE}"
@@ -271,10 +285,7 @@ echo ""
 
 # Set CI/CD variables
 if [[ "$PLATFORM" == "github" ]]; then
-  setup_github "$DEV_SCRIPT_ID" "$DEV_DEPLOYMENT_ID"
-  echo ""
-  echo "Note: GitHub CD uses a single CLASP_JSON secret (no environment scope)."
-  echo "If you need separate dev/prod, configure GitHub Environments manually."
+  setup_github "$DEV_SCRIPT_ID" "$DEV_DEPLOYMENT_ID" "$PROD_SCRIPT_ID" "$PROD_DEPLOYMENT_ID"
 elif [[ "$PLATFORM" == "gitlab" ]]; then
   setup_gitlab "$DEV_SCRIPT_ID" "$DEV_DEPLOYMENT_ID" "$PROD_SCRIPT_ID" "$PROD_DEPLOYMENT_ID"
 fi
