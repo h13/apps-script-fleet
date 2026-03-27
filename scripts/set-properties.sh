@@ -52,7 +52,7 @@ fi
 
 # Validate JSON
 node -e "JSON.parse(process.argv[1])" "$PROPS_JSON" 2>/dev/null \
-  || { echo "Error: Invalid JSON: ${PROPS_JSON}" >&2; exit 1; }
+  || { echo "Error: Invalid JSON provided." >&2; exit 1; }
 
 echo "Setting script properties via clasp run..."
 pnpm exec clasp run setScriptProperties --params "[${PROPS_JSON}]"

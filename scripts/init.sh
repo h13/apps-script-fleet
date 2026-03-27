@@ -300,6 +300,9 @@ echo ""
 require_cmd pnpm
 require_cmd node
 validate_type "$GAS_TYPE"
+if [[ -n "$GCP_PROJECT" ]] && ! [[ "$GCP_PROJECT" =~ ^[0-9]+$ ]]; then
+  die "--gcp-project must be a numeric project number (not project ID). Got: ${GCP_PROJECT}"
+fi
 
 # Default title from directory name
 if [[ -z "$TITLE" ]]; then
