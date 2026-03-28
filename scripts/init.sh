@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Prerequisites:
 #   - ~/.clasprc.json exists (shared via org password manager)
-#   - GitHub: gh CLI authenticated | GitLab: GITLAB_TOKEN env var set
+#   - GitHub: gh CLI authenticated | GitLab: glab CLI authenticated
 #   - Node.js + pnpm installed
 #
 # Usage:
@@ -100,12 +100,13 @@ init_remote() {
 }
 
 detect_platform() {
-  if echo "$REMOTE_URL" | grep -q "github"; then
+  local host="$REMOTE_HOST"
+  if command -v gh >/dev/null 2>&1 && gh auth status --hostname "$host" >/dev/null 2>&1; then
     echo "github"
-  elif echo "$REMOTE_URL" | grep -q "gitlab"; then
+  elif command -v glab >/dev/null 2>&1 && glab auth status --hostname "$host" >/dev/null 2>&1; then
     echo "gitlab"
   else
-    die "Cannot detect platform from remote URL: $REMOTE_URL"
+    die "No authenticated CLI found for ${host}. Run 'gh auth login' or 'glab auth login --hostname ${host}'."
   fi
 }
 
@@ -162,60 +163,54 @@ setup_github() {
 }
 
 # ---------------------------------------------------------------------------
-# GitLab helpers
+# GitLab helpers (via glab CLI)
 # ---------------------------------------------------------------------------
 
-gl_project_id() {
-  local path encoded_path project_id
+gl_encoded_path() {
+  local path
   path=$(extract_path "$REMOTE_URL")
-  encoded_path="${path//\//%2F}"
-  project_id=$(curl -sf --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-    "https://${REMOTE_HOST}/api/v4/projects/${encoded_path}" |
-    node -e "let b='';process.stdin.on('data',d=>b+=d);process.stdin.on('end',()=>process.stdout.write(String(JSON.parse(b).id)))")
-  echo "$project_id"
+  echo "${path//\//%2F}"
 }
 
 gl_set_variable() {
-  local project_id="$1" key="$2" value="$3" env_scope="$4" protected="$5"
+  local encoded_path="$1" key="$2" value="$3" env_scope="$4" protected="$5"
 
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-    --request POST \
-    --form "key=${key}" \
-    --form "value=${value}" \
-    --form "environment_scope=${env_scope}" \
-    --form "protected=${protected}" \
-    --form "masked=false" \
-    "https://${REMOTE_HOST}/api/v4/projects/${project_id}/variables")
-
-  if [[ "$http_code" == "201" ]]; then
-    : # created successfully
-  elif [[ "$http_code" == "400" ]]; then
-    # Already exists — update
-    local update_code
-    update_code=$(curl -s -o /dev/null -w "%{http_code}" \
-      --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-      --request PUT \
-      --form "value=${value}" \
-      --form "protected=${protected}" \
-      "https://${REMOTE_HOST}/api/v4/projects/${project_id}/variables/${key}?filter[environment_scope]=${env_scope}")
-    [[ "$update_code" == "200" ]] || die "Failed to update ${key} (${env_scope}): HTTP ${update_code}"
+  # Try to create; if it already exists (409), update instead
+  local result
+  if result=$(glab api "projects/${encoded_path}/variables" \
+    --hostname "$REMOTE_HOST" \
+    --method POST \
+    --raw-field "key=${key}" \
+    --raw-field "value=${value}" \
+    --raw-field "environment_scope=${env_scope}" \
+    --raw-field "protected=${protected}" \
+    --raw-field "masked=false" 2>&1); then
+    : # created
   else
-    die "Failed to create ${key} (${env_scope}): HTTP ${http_code}"
+    if echo "$result" | grep -q "409\|already been taken"; then
+      glab api "projects/${encoded_path}/variables/${key}?filter%5Benvironment_scope%5D=${env_scope}" \
+        --hostname "$REMOTE_HOST" \
+        --method PUT \
+        --raw-field "value=${value}" \
+        --raw-field "environment_scope=${env_scope}" \
+        --raw-field "protected=${protected}" >/dev/null 2>&1 \
+        || die "Failed to update ${key} (${env_scope})"
+    else
+      die "Failed to create ${key} (${env_scope}): ${result}"
+    fi
   fi
   echo "  Set ${key} (${env_scope}, protected=${protected})"
 }
 
 setup_gitlab() {
-  [[ -n "${GITLAB_TOKEN:-}" ]] || die "GITLAB_TOKEN environment variable is required for GitLab."
+  require_cmd glab
 
   local dev_script_id="$1" dev_deployment_id="$2"
   local prod_script_id="$3" prod_deployment_id="$4"
-  local project_id
-  project_id=$(gl_project_id)
+  local encoded_path
+  encoded_path=$(gl_encoded_path)
 
-  echo "Setting GitLab CI/CD variables (project ID: ${project_id})..."
+  echo "Setting GitLab CI/CD variables..."
 
   local project_id_field=""
   if [[ -n "$GCP_PROJECT" ]]; then
@@ -225,15 +220,15 @@ setup_gitlab() {
   local prod_clasp="{\"scriptId\":\"${prod_script_id}\",\"rootDir\":\"dist\"${project_id_field}}"
 
   # dev: protected=false (dev branch is typically not protected)
-  gl_set_variable "$project_id" "CLASP_JSON" "$dev_clasp" "development" "false"
-  gl_set_variable "$project_id" "DEPLOYMENT_ID" "$dev_deployment_id" "development" "false"
+  gl_set_variable "$encoded_path" "CLASP_JSON" "$dev_clasp" "development" "false"
+  gl_set_variable "$encoded_path" "DEPLOYMENT_ID" "$dev_deployment_id" "development" "false"
   # prod: protected=true
-  gl_set_variable "$project_id" "CLASP_JSON" "$prod_clasp" "production" "true"
-  gl_set_variable "$project_id" "DEPLOYMENT_ID" "$prod_deployment_id" "production" "true"
+  gl_set_variable "$encoded_path" "CLASP_JSON" "$prod_clasp" "production" "true"
+  gl_set_variable "$encoded_path" "DEPLOYMENT_ID" "$prod_deployment_id" "production" "true"
 
   if [[ -n "$GCP_PROJECT" ]]; then
-    gl_set_variable "$project_id" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "development" "false"
-    gl_set_variable "$project_id" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "production" "true"
+    gl_set_variable "$encoded_path" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "development" "false"
+    gl_set_variable "$encoded_path" "GCP_PROJECT_NUMBER" "$GCP_PROJECT" "production" "true"
   fi
 }
 
@@ -284,8 +279,8 @@ clasp_create_and_deploy() {
   # Set global variables for the caller
   local upper_label
   upper_label=$(echo "$env_label" | tr '[:lower:]' '[:upper:]')
-  eval "${upper_label}_SCRIPT_ID='${script_id}'"
-  eval "${upper_label}_DEPLOYMENT_ID='${deployment_id}'"
+  declare -g "${upper_label}_SCRIPT_ID=${script_id}"
+  declare -g "${upper_label}_DEPLOYMENT_ID=${deployment_id}"
 }
 
 # ---------------------------------------------------------------------------

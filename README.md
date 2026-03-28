@@ -113,12 +113,12 @@ Binding all GAS projects to a single standard GCP project enables centralized Cl
 Once `~/.clasprc.json` is on your machine, run the init script to create GAS projects and configure CI/CD variables automatically:
 
 ```bash
-# GitHub: gh CLI must be authenticated
-./scripts/init.sh --title "My Script" --gcp-project 123456789
-
-# GitLab: set GITLAB_TOKEN first
-GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script" --gcp-project 123456789
+./scripts/init.sh \
+  --title "My Script" \
+  --gcp-project 123456789
 ```
+
+The platform (GitHub or GitLab) is detected automatically from the authenticated CLI (`gh` or `glab`) for your git remote host.
 
 Options:
 
