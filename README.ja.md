@@ -113,12 +113,12 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 `~/.clasprc.json` がローカルにある状態で、init スクリプトを実行すると GAS プロジェクトの作成と CI/CD 変数の設定を自動で行います：
 
 ```bash
-# GitHub: gh CLI で認証済みであること
-./scripts/init.sh --title "My Script" --gcp-project 123456789
-
-# GitLab: GITLAB_TOKEN を設定してから実行
-GITLAB_TOKEN="glpat-xxx" ./scripts/init.sh --title "My Script" --gcp-project 123456789
+./scripts/init.sh \
+  --title "My Script" \
+  --gcp-project 123456789
 ```
+
+プラットフォーム（GitHub / GitLab）は git remote のホストに対して認証済みの CLI（`gh` または `glab`）から自動判定されます。
 
 オプション：
 
