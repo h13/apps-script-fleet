@@ -151,11 +151,20 @@ echo ""
 
 echo "Creating GitLab project..."
 
+# Resolve namespace path to numeric ID (GitLab API requires namespace_id)
+ENCODED_GROUP=$(echo "$GROUP" | sed 's|/|%2F|g')
+NAMESPACE_ID=$(glab api "namespaces/${ENCODED_GROUP}" --hostname "$HOSTNAME" 2>/dev/null \
+  | node -e "
+    const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+    process.stdout.write(String(data.id || ''));
+  ") || true
+[[ -n "$NAMESPACE_ID" ]] || die "Could not find namespace '${GROUP}' on ${HOSTNAME}. Check the group path."
+
 CREATE_ARGS=(api -X POST "projects"
   --hostname "$HOSTNAME"
   --raw-field "name=${PROJECT_NAME}"
   --raw-field "path=${PROJECT_NAME}"
-  --raw-field "namespace_path=${GROUP}"
+  --raw-field "namespace_id=${NAMESPACE_ID}"
   --raw-field "visibility=${VISIBILITY}"
   --raw-field "initialize_with_readme=false"
 )
