@@ -117,6 +117,7 @@ esac
 
 require_cmd glab
 require_cmd git
+require_cmd node
 
 # Detect hostname from glab auth if not specified
 if [[ -z "$HOSTNAME" ]]; then
@@ -251,7 +252,7 @@ git commit -m "Initial commit from apps-script-fleet template" --quiet
 
 # Use glab-compatible auth for push
 PUSH_URL=$(echo "$CLONE_URL" | sed "s|https://|https://oauth2:$(glab auth token --hostname "$HOSTNAME")@|")
-git push -u "$PUSH_URL" main --quiet 2>&1
+git push -u "$PUSH_URL" main --quiet 2>/dev/null || die "Failed to push to GitLab. Check your glab authentication."
 
 # Replace remote URL with clean version (no token)
 git remote set-url origin "$CLONE_URL"
