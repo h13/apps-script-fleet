@@ -63,8 +63,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0(prettier@3.9.5)(rollup@4.62.2)
       rollup-plugin-typescript2:
-        specifier: 0.36.0
-        version: 0.36.0(rollup@4.62.2)(typescript@5.9.3)
+        specifier: 0.37.0
+        version: 0.37.0(rollup@4.62.2)(typescript@5.9.3)
       stylelint:
         specifier: 17.14.0
         version: 17.14.0(typescript@5.9.3)
@@ -2889,8 +2889,8 @@ packages:
       prettier: ^1.0.0 || ^2.0.0 || ^3.0.0
       rollup: ^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
 
-  rollup-plugin-typescript2@0.36.0:
-    resolution: {integrity: sha512-NB2CSQDxSe9+Oe2ahZbf+B4bh7pHwjV5L+RSYpCu7Q5ROuN94F9b6ioWwKfz3ueL3KTtmX4o2MUH2cgHDIEUsw==}
+  rollup-plugin-typescript2@0.37.0:
+    resolution: {integrity: sha512-S1r/4Ufi13Yg/chPlh4iSHWq2Zs/sIAodW5SKUoCQfy/DEQhkS2XRFEtv+NRq3iBO4WHHfqKtDPOC5lJTYm7OQ==}
     peerDependencies:
       rollup: '>=1.26.3'
       typescript: '>=2.4.0'
@@ -2933,11 +2933,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.7.4:
-    resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.8.5:
@@ -6226,7 +6221,7 @@ snapshots:
   normalize-package-data@6.0.2:
     dependencies:
       hosted-git-info: 7.0.2
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -6512,13 +6507,13 @@ snapshots:
       prettier: 3.9.5
       rollup: 4.62.2
 
-  rollup-plugin-typescript2@0.36.0(rollup@4.62.2)(typescript@5.9.3):
+  rollup-plugin-typescript2@0.37.0(rollup@4.62.2)(typescript@5.9.3):
     dependencies:
       '@rollup/pluginutils': 4.2.1
       find-cache-dir: 3.3.2
       fs-extra: 10.1.0
       rollup: 4.62.2
-      semver: 7.7.4
+      semver: 7.8.5
       tslib: 2.8.1
       typescript: 5.9.3
 
@@ -6586,8 +6581,6 @@ snapshots:
   safer-buffer@2.1.2: {}
 
   semver@6.3.1: {}
-
-  semver@7.7.4: {}
 
   semver@7.8.5: {}
 
