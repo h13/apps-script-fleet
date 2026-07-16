@@ -37,6 +37,8 @@ git push -u origin main
 
 > Instance レベルのテンプレートには管理者権限が必要で、GitLab.com では利用できません。すべての環境で Group テンプレートを推奨します。
 
+> **Free tier**: Group project templates は Premium 以上のプランが必要です。Free tier の場合はこの手順をスキップし、代わりに `scripts/create-gitlab-project.sh` を使用してください — 下記の[プロジェクトごと（Free Tier）](#プロジェクトごとfree-tier)を参照。
+
 ### 3. Template Project に Template Sync を設定
 
 Template Project は GitHub から同期して最新の状態を保ちます。この設定は **Template Project にのみ**行います — 個々の GAS プロジェクトには不要です。
@@ -75,6 +77,8 @@ git clone https://gitlab.yourcompany.com/<your-group>/<your-project>.git
 cd <your-project>
 pnpm install
 ```
+
+> **Free tier**: 「Create from template」が利用できない場合は、下記の [Free Tier](#プロジェクトごとfree-tier) ワークフローを使用してください。
 
 ### 2. Script ID の設定
 
@@ -136,6 +140,58 @@ pnpm run check    # lint + 型チェック + テスト
 | `template_sync` | `github.com`（デフォルト）または社内ミラー（`TEMPLATE_REPO_URL` 上書き時） |
 
 User Project の Runner は `github.com` への接続が不要です。外部アクセス（または社内ミラー）が必要なのは Template Project の Runner のみです。
+
+## プロジェクトごと（Free Tier）
+
+GitLab Free tier では「Create from template」（Group project templates）が利用できません。代わりに `scripts/create-gitlab-project.sh` を使用してプロジェクトを作成します。
+
+### 前提条件
+
+- [glab CLI](https://gitlab.com/gitlab-org/cli) が対象 GitLab ホストに認証済み
+- apps-script-fleet テンプレートリポジトリのローカルクローン
+
+### 1. プロジェクトの作成
+
+テンプレートリポジトリのルートから実行：
+
+```bash
+./scripts/create-gitlab-project.sh --group my-org --name my-gas-project
+```
+
+新しい GitLab リポジトリが作成され、テンプレートファイルがコピーされ、初回コミットが push されます。
+
+オプション：
+
+| フラグ            | 説明                                         | デフォルト       |
+| ----------------- | -------------------------------------------- | ---------------- |
+| `--group`         | GitLab group または namespace（必須）         |                  |
+| `--name`          | リポジトリ名（必須）                          |                  |
+| `--hostname`      | GitLab ホスト名                               | 自動検出         |
+| `--visibility`    | `private`、`internal`、`public`               | `private`        |
+| `--description`   | プロジェクトの説明                            |                  |
+
+### 2. GAS プロジェクトの初期化と CI/CD 設定
+
+```bash
+cd ../my-gas-project
+pnpm install
+./scripts/init.sh --title "My Script" [--gcp-project <NUMBER>]
+```
+
+### 3. Template Sync の設定
+
+1. **Project Access Token** を作成（Settings → Access Tokens、`write_repository` スコープ）
+2. CI/CD Variable として `GITLAB_PUSH_TOKEN` の名前で追加
+3. `TEMPLATE_REPO_URL` を CI/CD Variable として追加し、テンプレートリポジトリの git URL を指定（例: `https://gitlab.yourcompany.com/my-org/apps-script-fleet.git`）。または Group レベルで設定
+4. **Pipeline Schedule** を作成（CI/CD → Schedules）— 例: 毎週日曜
+
+### 4. 確認とデプロイ
+
+```bash
+pnpm run check    # lint + 型チェック + テスト
+```
+
+`dev` への push で dev 環境へ、`main` への push で本番環境へ自動デプロイされます。
 
 ## 既存環境からの移行
 
