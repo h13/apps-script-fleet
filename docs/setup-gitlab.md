@@ -37,6 +37,8 @@ Then register it as a **[Group project template](https://docs.gitlab.com/user/gr
 
 > Instance-level templates require admin privileges and are not available on GitLab.com. Group templates are recommended for all environments.
 
+> **Free tier**: Group project templates require Premium or higher. If you are on the Free tier, skip this step and use `scripts/create-gitlab-project.sh` instead — see [Per Project (Free Tier)](#per-project-free-tier) below.
+
 ### 3. Configure Template Sync on the Template Project
 
 The Template Project syncs from GitHub to stay up to date. Configure this on the **Template Project only** — individual GAS projects do not need this.
@@ -75,6 +77,8 @@ git clone https://gitlab.yourcompany.com/<your-group>/<your-project>.git
 cd <your-project>
 pnpm install
 ```
+
+> **Free tier**: If "Create from template" is not available, use the [Free Tier](#per-project-free-tier) workflow below instead.
 
 ### 2. Set your script IDs
 
@@ -136,6 +140,58 @@ Push to `dev` triggers dev deployment, push to `main` triggers production deploy
 | `template_sync` | `github.com` (default) or internal mirror (if `TEMPLATE_REPO_URL` overridden) |
 
 User Project runners never need to reach `github.com`. Only the Template Project's runner needs external access (or an internal mirror).
+
+## Per Project (Free Tier)
+
+On GitLab Free tier, "Create from template" (Group project templates) is not available. Use `scripts/create-gitlab-project.sh` to create projects from the template instead.
+
+### Prerequisites
+
+- [glab CLI](https://gitlab.com/gitlab-org/cli) authenticated for your GitLab host
+- A local clone of the apps-script-fleet template repository
+
+### 1. Create the project
+
+From the template repository root:
+
+```bash
+./scripts/create-gitlab-project.sh --group my-org --name my-gas-project
+```
+
+This creates a new GitLab repository, copies template files, and pushes the initial commit.
+
+Options:
+
+| Flag              | Description                                         | Default         |
+| ----------------- | --------------------------------------------------- | --------------- |
+| `--group`         | GitLab group or namespace (required)                |                 |
+| `--name`          | Repository name (required)                          |                 |
+| `--hostname`      | GitLab hostname                                     | auto-detect     |
+| `--visibility`    | `private`, `internal`, or `public`                  | `private`       |
+| `--description`   | Project description                                 |                 |
+
+### 2. Initialize GAS projects and CI/CD
+
+```bash
+cd ../my-gas-project
+pnpm install
+./scripts/init.sh --title "My Script" [--gcp-project <NUMBER>]
+```
+
+### 3. Set up Template Sync
+
+1. Create a **Project Access Token** (Settings → Access Tokens) with `write_repository` scope
+2. Add it as a CI/CD Variable named `GITLAB_PUSH_TOKEN`
+3. Add `TEMPLATE_REPO_URL` as a CI/CD Variable pointing to the template repository's git URL (e.g., `https://gitlab.yourcompany.com/my-org/apps-script-fleet.git`), or set it at the Group level for all projects
+4. Create a **Pipeline Schedule** (CI/CD → Schedules) — e.g., weekly on Sunday
+
+### 4. Verify and deploy
+
+```bash
+pnpm run check    # lint + typecheck + test
+```
+
+Push to `dev` triggers dev deployment, push to `main` triggers production deployment.
 
 ## Migration from Existing Setup
 
