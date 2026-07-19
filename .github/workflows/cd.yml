@@ -17,14 +17,16 @@ jobs:
     concurrency:
       group: deploy-${{ github.event.workflow_run.head_branch }}
       cancel-in-progress: ${{ github.event.workflow_run.head_branch != 'main' }}
+    env:
+      SCRIPT_PROPERTIES: ${{ secrets.SCRIPT_PROPERTIES }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
-      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: pnpm
@@ -52,10 +54,8 @@ jobs:
         run: pnpm exec clasp deploy -i "${{ vars.DEPLOYMENT_ID }}" --description "CD deploy from ${{ github.event.workflow_run.head_branch }}@${{ github.event.workflow_run.head_sha }}"
 
       - name: Set script properties
-        if: vars.GCP_PROJECT_NUMBER != '' && secrets.SCRIPT_PROPERTIES != ''
+        if: vars.GCP_PROJECT_NUMBER != '' && env.SCRIPT_PROPERTIES != ''
         run: ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
-        env:
-          SCRIPT_PROPERTIES: ${{ secrets.SCRIPT_PROPERTIES }}
 
       - name: Post-deploy hook
         if: always() && hashFiles('.github/hooks/post-deploy.sh') != ''
