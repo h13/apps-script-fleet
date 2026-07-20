@@ -14,11 +14,12 @@ build/
 # Config files
 tsconfig.json
 jest.config.json
-eslint.config.mjs
+.oxlintrc.json
+.oxfmtrc.json
 rollup.config.mjs
 package.json
 pnpm-lock.yaml
-.prettierrc
+pnpm-workspace.yaml
 .htmlhintrc
 .stylelintrc.json
 .editorconfig

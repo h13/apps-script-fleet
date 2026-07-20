@@ -42,12 +42,12 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 
 ### 3. Configure GitHub environments
 
-| Environment   | Secret / Variable         | Value                                                              |
-| ------------- | ------------------------- | ------------------------------------------------------------------ |
-| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     |
-| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                                             |
-| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    |
-| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                                            |
+| Environment   | Secret / Variable         | Value                                                           |
+| ------------- | ------------------------- | --------------------------------------------------------------- |
+| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`  |
+| `development` | Variable: `DEPLOYMENT_ID` | Your dev deployment ID                                          |
+| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}` |
+| `production`  | Variable: `DEPLOYMENT_ID` | Your prod deployment ID                                         |
 
 > **With GCP project**: Add `"projectId":"YOUR_PROJECT_NUMBER"` to `CLASP_JSON` (e.g., `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`). This is set automatically when using `init.sh --gcp-project`.
 

@@ -2,7 +2,7 @@ name: Sync from template
 
 on:
   schedule:
-    - cron: "0 0 * * 0" # Every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0' # Every Sunday at 00:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -20,5 +20,5 @@ jobs:
         with:
           source_repo_path: h13/apps-script-fleet
           upstream_branch: main
-          pr_title: "chore: sync from apps-script-fleet"
+          pr_title: 'chore: sync from apps-script-fleet'
           pr_labels: template-sync

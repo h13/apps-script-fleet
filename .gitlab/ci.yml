@@ -56,6 +56,6 @@ templatesyncignore_check:
 
       echo "Whitelist check passed."
   variables:
-    TEMPLATE_PROJECT_PATH: ""
+    TEMPLATE_PROJECT_PATH: ''
   rules:
     - if: $TEMPLATE_PROJECT_PATH != ""

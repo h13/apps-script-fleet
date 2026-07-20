@@ -46,11 +46,11 @@ The difference at a glance:
 
 | Category     | Tools                                                              |
 | ------------ | ------------------------------------------------------------------ |
-| Language     | TypeScript (strict mode)                                           |
+| Language     | TypeScript 7 (strict mode)                                         |
 | Bundler      | Rollup (Apps Script–compatible output)                             |
 | Deployment   | clasp (dev / prod environments)                                    |
 | Testing      | Jest (80% coverage threshold)                                      |
-| Linting      | ESLint, Prettier, Stylelint, HTMLHint                              |
+| Linting      | Oxlint, Oxfmt, Stylelint, HTMLHint                                 |
 | Git hooks    | husky + lint-staged                                                |
 | CI/CD        | GitHub Actions + GitLab CI (CI on PR, CD on merge to `dev`/`main`) |
 | Dependencies | Renovate (auto-update with automerge)                              |
@@ -134,7 +134,7 @@ When GCP project integration is configured, you can automatically inject Script 
 
 1. **Set `SCRIPT_PROPERTIES`** as a CI/CD secret (JSON string per environment):
    ```json
-   {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+   { "API_KEY": "xxx", "SLACK_WEBHOOK": "https://hooks.slack.com/..." }
    ```
 2. Properties are injected automatically after `clasp deploy` when both `GCP_PROJECT_NUMBER` and `SCRIPT_PROPERTIES` are set
 3. See `.github/hooks/post-deploy.sh.example` or `.gitlab/post-deploy.yml.example` for hook-based alternatives
@@ -206,7 +206,8 @@ your-project/
 ├── rollup.config.mjs
 ├── tsconfig.json
 ├── jest.config.json
-├── eslint.config.mjs
+├── .oxlintrc.json
+├── .oxfmtrc.json
 ├── renovate.json          # Auto-update config
 └── .templatesyncignore    # Your code won't be overwritten
 ```

@@ -98,12 +98,12 @@ Create `.clasp-dev.json` and `.clasp-prod.json` (gitignored):
 
 Go to Settings → CI/CD → Variables and add:
 
-| Variable        | Environment scope | Value                                                              | Options |
-| --------------- | ----------------- | ------------------------------------------------------------------ | ------- |
-| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     | Masked  |
-| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    | Masked  |
-| `DEPLOYMENT_ID` | `development`     | Your dev deployment ID                                             |         |
-| `DEPLOYMENT_ID` | `production`      | Your prod deployment ID                                            |         |
+| Variable        | Environment scope | Value                                                           | Options |
+| --------------- | ----------------- | --------------------------------------------------------------- | ------- |
+| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`  | Masked  |
+| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}` | Masked  |
+| `DEPLOYMENT_ID` | `development`     | Your dev deployment ID                                          |         |
+| `DEPLOYMENT_ID` | `production`      | Your prod deployment ID                                         |         |
 
 > **With GCP project**: Add `"projectId":"YOUR_PROJECT_NUMBER"` to `CLASP_JSON` (e.g., `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`). This is set automatically when using `init.sh --gcp-project`.
 
@@ -131,7 +131,7 @@ Push to `dev` triggers dev deployment, push to `main` triggers production deploy
 | --------------- | ------------------------------------------------------ |
 | `check`         | npm registry only (for `pnpm install`)                 |
 | `deploy_*`      | `script.google.com` (HTTPS)                            |
-| `template_sync` | Template Project (internal GitLab, via Group Variable)  |
+| `template_sync` | Template Project (internal GitLab, via Group Variable) |
 
 **Template Project:**
 
@@ -162,13 +162,13 @@ This creates a new GitLab repository, copies template files, and pushes the init
 
 Options:
 
-| Flag              | Description                                         | Default         |
-| ----------------- | --------------------------------------------------- | --------------- |
-| `--group`         | GitLab group or namespace (required)                |                 |
-| `--name`          | Repository name (required)                          |                 |
-| `--hostname`      | GitLab hostname                                     | auto-detect     |
-| `--visibility`    | `private`, `internal`, or `public`                  | `private`       |
-| `--description`   | Project description                                 |                 |
+| Flag            | Description                          | Default     |
+| --------------- | ------------------------------------ | ----------- |
+| `--group`       | GitLab group or namespace (required) |             |
+| `--name`        | Repository name (required)           |             |
+| `--hostname`    | GitLab hostname                      | auto-detect |
+| `--visibility`  | `private`, `internal`, or `public`   | `private`   |
+| `--description` | Project description                  |             |
 
 ### 2. Initialize GAS projects and CI/CD
 

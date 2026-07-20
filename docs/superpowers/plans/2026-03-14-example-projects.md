@@ -16,23 +16,24 @@
 
 ### File Map
 
-| Action | Path | Responsibility |
-|--------|------|----------------|
-| Modify | `src/index.ts` | GAS エントリ: `IS_VALID_EMAIL()`, `IS_VALID_PHONE_JP()`, `IS_VALID_POSTAL_CODE()` |
-| Create | `src/validators.ts` | 正規表現ベースの検証ロジック（純粋関数） |
-| Modify | `test/greeting.test.ts` → Delete | テンプレートのサンプルテスト削除 |
-| Delete | `src/greeting.ts` | テンプレートのサンプルモジュール削除 |
-| Delete | `src/app.html` | HTML 不要（カスタム関数） |
-| Create | `test/validators.test.ts` | 検証ロジックのテスト |
-| Modify | `appsscript.json` | `webapp` セクション削除、`oauthScopes: []` |
-| Modify | `package.json` | `name` 変更、build スクリプトの HTML コピー削除 |
-| Modify | `README.md` | プロジェクト固有の説明に書き換え |
+| Action | Path                             | Responsibility                                                                    |
+| ------ | -------------------------------- | --------------------------------------------------------------------------------- |
+| Modify | `src/index.ts`                   | GAS エントリ: `IS_VALID_EMAIL()`, `IS_VALID_PHONE_JP()`, `IS_VALID_POSTAL_CODE()` |
+| Create | `src/validators.ts`              | 正規表現ベースの検証ロジック（純粋関数）                                          |
+| Modify | `test/greeting.test.ts` → Delete | テンプレートのサンプルテスト削除                                                  |
+| Delete | `src/greeting.ts`                | テンプレートのサンプルモジュール削除                                              |
+| Delete | `src/app.html`                   | HTML 不要（カスタム関数）                                                         |
+| Create | `test/validators.test.ts`        | 検証ロジックのテスト                                                              |
+| Modify | `appsscript.json`                | `webapp` セクション削除、`oauthScopes: []`                                        |
+| Modify | `package.json`                   | `name` 変更、build スクリプトの HTML コピー削除                                   |
+| Modify | `README.md`                      | プロジェクト固有の説明に書き換え                                                  |
 
 ---
 
 ### Task 1: リポジトリ作成と初期クリーンアップ
 
 **Files:**
+
 - Create: リポジトリ `h13/apps-script-custom-functions` from template
 - Delete: `src/greeting.ts`, `src/app.html`, `test/greeting.test.ts`
 - Modify: `package.json`, `appsscript.json`
@@ -101,6 +102,7 @@ git commit -m "chore: clean up template for custom functions project"
 ### Task 2: validators.ts — テスト作成（RED）
 
 **Files:**
+
 - Create: `test/validators.test.ts`
 
 - [ ] **Step 1: テストファイルを作成**
@@ -110,74 +112,74 @@ import {
   isValidEmail,
   isValidPhoneJp,
   isValidPostalCode,
-} from "../src/validators.js";
+} from '../src/validators.js';
 
-describe("isValidEmail", () => {
+describe('isValidEmail', () => {
   it.each([
-    ["user@example.com", true],
-    ["user.name+tag@example.co.jp", true],
-    ["user@subdomain.example.com", true],
-  ])("returns true for valid email: %s", (input, expected) => {
+    ['user@example.com', true],
+    ['user.name+tag@example.co.jp', true],
+    ['user@subdomain.example.com', true],
+  ])('returns true for valid email: %s', (input, expected) => {
     expect(isValidEmail(input)).toBe(expected);
   });
 
   it.each([
-    ["", false],
-    ["plaintext", false],
-    ["@no-local.com", false],
-    ["no-domain@", false],
-    ["spaces in@email.com", false],
-    ["missing@.com", false],
-  ])("returns false for invalid email: %s", (input, expected) => {
+    ['', false],
+    ['plaintext', false],
+    ['@no-local.com', false],
+    ['no-domain@', false],
+    ['spaces in@email.com', false],
+    ['missing@.com', false],
+  ])('returns false for invalid email: %s', (input, expected) => {
     expect(isValidEmail(input)).toBe(expected);
   });
 });
 
-describe("isValidPhoneJp", () => {
+describe('isValidPhoneJp', () => {
   it.each([
-    ["03-1234-5678", true],
-    ["0312345678", true],
-    ["090-1234-5678", true],
-    ["09012345678", true],
-    ["0120-123-456", true],
-    ["0120123456", true],
-    ["080-1234-5678", true],
-    ["070-1234-5678", true],
-    ["045-123-4567", true],
-    ["0451234567", true],
-  ])("returns true for valid JP phone: %s", (input, expected) => {
+    ['03-1234-5678', true],
+    ['0312345678', true],
+    ['090-1234-5678', true],
+    ['09012345678', true],
+    ['0120-123-456', true],
+    ['0120123456', true],
+    ['080-1234-5678', true],
+    ['070-1234-5678', true],
+    ['045-123-4567', true],
+    ['0451234567', true],
+  ])('returns true for valid JP phone: %s', (input, expected) => {
     expect(isValidPhoneJp(input)).toBe(expected);
   });
 
   it.each([
-    ["", false],
-    ["1234567890", false],
-    ["03-1234-567", false],
-    ["+81-3-1234-5678", false],
-    ["abc-defg-hijk", false],
-    ["03-1234-56789", false],
-  ])("returns false for invalid JP phone: %s", (input, expected) => {
+    ['', false],
+    ['1234567890', false],
+    ['03-1234-567', false],
+    ['+81-3-1234-5678', false],
+    ['abc-defg-hijk', false],
+    ['03-1234-56789', false],
+  ])('returns false for invalid JP phone: %s', (input, expected) => {
     expect(isValidPhoneJp(input)).toBe(expected);
   });
 });
 
-describe("isValidPostalCode", () => {
+describe('isValidPostalCode', () => {
   it.each([
-    ["123-4567", true],
-    ["1234567", true],
-    ["000-0000", true],
-  ])("returns true for valid postal code: %s", (input, expected) => {
+    ['123-4567', true],
+    ['1234567', true],
+    ['000-0000', true],
+  ])('returns true for valid postal code: %s', (input, expected) => {
     expect(isValidPostalCode(input)).toBe(expected);
   });
 
   it.each([
-    ["", false],
-    ["123-456", false],
-    ["12-34567", false],
-    ["1234-567", false],
-    ["abcdefg", false],
-    ["123-45678", false],
-  ])("returns false for invalid postal code: %s", (input, expected) => {
+    ['', false],
+    ['123-456', false],
+    ['12-34567', false],
+    ['1234-567', false],
+    ['abcdefg', false],
+    ['123-45678', false],
+  ])('returns false for invalid postal code: %s', (input, expected) => {
     expect(isValidPostalCode(input)).toBe(expected);
   });
 });
@@ -203,19 +205,21 @@ git commit -m "test: add validators test cases (RED)"
 ### Task 3: validators.ts — 実装（GREEN）
 
 **Files:**
+
 - Create: `src/validators.ts`
 
 - [ ] **Step 1: validators.ts を実装**
 
 ```typescript
 export function isValidEmail(value: string): boolean {
-  if (value === "") return false;
-  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  if (value === '') return false;
+  const pattern =
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
   return pattern.test(value);
 }
 
 export function isValidPhoneJp(value: string): boolean {
-  if (value === "") return false;
+  if (value === '') return false;
   const patterns = [
     /^0\d-\d{4}-\d{4}$/, // 固定電話（2桁市外局番）: 03-1234-5678
     /^0\d{9}$/, // 固定電話（ハイフンなし）: 0312345678
@@ -229,7 +233,7 @@ export function isValidPhoneJp(value: string): boolean {
 }
 
 export function isValidPostalCode(value: string): boolean {
-  if (value === "") return false;
+  if (value === '') return false;
   const pattern = /^\d{3}-?\d{4}$/;
   return pattern.test(value);
 }
@@ -255,12 +259,17 @@ git commit -m "feat: implement data validation functions (GREEN)"
 ### Task 4: index.ts — GAS エントリポイント
 
 **Files:**
+
 - Modify: `src/index.ts`
 
 - [ ] **Step 1: src/index.ts を書き換え**
 
 ```typescript
-import { isValidEmail, isValidPhoneJp, isValidPostalCode } from "./validators.js";
+import {
+  isValidEmail,
+  isValidPhoneJp,
+  isValidPostalCode,
+} from './validators.js';
 
 function IS_VALID_EMAIL(value: string): boolean {
   return isValidEmail(value);
@@ -306,6 +315,7 @@ git commit -m "feat: add GAS entry points for custom functions"
 ### Task 5: README.md 更新と最終確認
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: README.md を書き換え**
@@ -334,25 +344,26 @@ git push origin main
 
 ### File Map
 
-| Action | Path | Responsibility |
-|--------|------|----------------|
-| Modify | `src/index.ts` | GAS エントリ: `checkNewRows()`, `setSlackConfig()` |
-| Create | `src/sheet-reader.ts` | 行データ差分抽出ロジック（純粋関数） |
-| Create | `src/slack-message.ts` | Slack API payload 構築（純粋関数） |
-| Delete | `src/greeting.ts` | テンプレートのサンプル削除 |
-| Delete | `src/app.html` | HTML 不要 |
-| Delete | `test/greeting.test.ts` | テンプレートのサンプルテスト削除 |
-| Create | `test/sheet-reader.test.ts` | 差分抽出ロジックのテスト |
-| Create | `test/slack-message.test.ts` | payload 構築のテスト |
-| Modify | `appsscript.json` | `webapp` セクション削除、scopes 変更 |
-| Modify | `package.json` | `name` 変更、build スクリプトの HTML コピー削除 |
-| Modify | `README.md` | プロジェクト固有の説明 |
+| Action | Path                         | Responsibility                                     |
+| ------ | ---------------------------- | -------------------------------------------------- |
+| Modify | `src/index.ts`               | GAS エントリ: `checkNewRows()`, `setSlackConfig()` |
+| Create | `src/sheet-reader.ts`        | 行データ差分抽出ロジック（純粋関数）               |
+| Create | `src/slack-message.ts`       | Slack API payload 構築（純粋関数）                 |
+| Delete | `src/greeting.ts`            | テンプレートのサンプル削除                         |
+| Delete | `src/app.html`               | HTML 不要                                          |
+| Delete | `test/greeting.test.ts`      | テンプレートのサンプルテスト削除                   |
+| Create | `test/sheet-reader.test.ts`  | 差分抽出ロジックのテスト                           |
+| Create | `test/slack-message.test.ts` | payload 構築のテスト                               |
+| Modify | `appsscript.json`            | `webapp` セクション削除、scopes 変更               |
+| Modify | `package.json`               | `name` 変更、build スクリプトの HTML コピー削除    |
+| Modify | `README.md`                  | プロジェクト固有の説明                             |
 
 ---
 
 ### Task 6: リポジトリ作成と初期クリーンアップ
 
 **Files:**
+
 - Create: リポジトリ `h13/apps-script-slack-notifier` from template
 - Delete: `src/greeting.ts`, `src/app.html`, `test/greeting.test.ts`
 - Modify: `package.json`, `appsscript.json`
@@ -420,55 +431,56 @@ git commit -m "chore: clean up template for slack notifier project"
 ### Task 7: sheet-reader.ts — テスト作成（RED）
 
 **Files:**
+
 - Create: `test/sheet-reader.test.ts`
 
 - [ ] **Step 1: テストファイルを作成**
 
 ```typescript
-import { extractNewRows } from "../src/sheet-reader.js";
+import { extractNewRows } from '../src/sheet-reader.js';
 
-describe("extractNewRows", () => {
-  it("returns empty array when no new rows", () => {
+describe('extractNewRows', () => {
+  it('returns empty array when no new rows', () => {
     const allRows = [
-      ["Name", "Email"],
-      ["Alice", "alice@example.com"],
+      ['Name', 'Email'],
+      ['Alice', 'alice@example.com'],
     ];
     const result = extractNewRows(allRows, 2);
     expect(result).toEqual([]);
   });
 
-  it("returns new rows after lastProcessedIndex", () => {
+  it('returns new rows after lastProcessedIndex', () => {
     const allRows = [
-      ["Name", "Email"],
-      ["Alice", "alice@example.com"],
-      ["Bob", "bob@example.com"],
+      ['Name', 'Email'],
+      ['Alice', 'alice@example.com'],
+      ['Bob', 'bob@example.com'],
     ];
     const result = extractNewRows(allRows, 1);
     expect(result).toEqual([
-      { index: 2, data: ["Alice", "alice@example.com"] },
-      { index: 3, data: ["Bob", "bob@example.com"] },
+      { index: 2, data: ['Alice', 'alice@example.com'] },
+      { index: 3, data: ['Bob', 'bob@example.com'] },
     ]);
   });
 
-  it("returns all data rows when lastProcessedIndex is 0", () => {
+  it('returns all data rows when lastProcessedIndex is 0', () => {
     const allRows = [
-      ["Name", "Email"],
-      ["Alice", "alice@example.com"],
+      ['Name', 'Email'],
+      ['Alice', 'alice@example.com'],
     ];
     const result = extractNewRows(allRows, 0);
     expect(result).toEqual([
-      { index: 1, data: ["Name", "Email"] },
-      { index: 2, data: ["Alice", "alice@example.com"] },
+      { index: 1, data: ['Name', 'Email'] },
+      { index: 2, data: ['Alice', 'alice@example.com'] },
     ]);
   });
 
-  it("returns empty array for empty sheet", () => {
+  it('returns empty array for empty sheet', () => {
     const result = extractNewRows([], 0);
     expect(result).toEqual([]);
   });
 
-  it("returns empty array when lastProcessedIndex equals row count", () => {
-    const allRows = [["Name", "Email"]];
+  it('returns empty array when lastProcessedIndex equals row count', () => {
+    const allRows = [['Name', 'Email']];
     const result = extractNewRows(allRows, 1);
     expect(result).toEqual([]);
   });
@@ -495,6 +507,7 @@ git commit -m "test: add sheet-reader test cases (RED)"
 ### Task 8: sheet-reader.ts — 実装（GREEN）
 
 **Files:**
+
 - Create: `src/sheet-reader.ts`
 
 - [ ] **Step 1: sheet-reader.ts を実装**
@@ -536,45 +549,46 @@ git commit -m "feat: implement sheet row extraction (GREEN)"
 ### Task 9: slack-message.ts — テスト作成（RED）
 
 **Files:**
+
 - Create: `test/slack-message.test.ts`
 
 - [ ] **Step 1: テストファイルを作成**
 
 ```typescript
-import type { RowEntry } from "../src/sheet-reader.js";
-import { buildSlackPayload } from "../src/slack-message.js";
+import type { RowEntry } from '../src/sheet-reader.js';
+import { buildSlackPayload } from '../src/slack-message.js';
 
-describe("buildSlackPayload", () => {
-  it("builds payload for single row", () => {
+describe('buildSlackPayload', () => {
+  it('builds payload for single row', () => {
     const rows: readonly RowEntry[] = [
-      { index: 2, data: ["Alice", "alice@example.com"] },
+      { index: 2, data: ['Alice', 'alice@example.com'] },
     ];
-    const result = buildSlackPayload(rows, "C01234567");
+    const result = buildSlackPayload(rows, 'C01234567');
     expect(result).toEqual({
-      channel: "C01234567",
-      text: expect.stringContaining("Alice"),
+      channel: 'C01234567',
+      text: expect.stringContaining('Alice'),
     });
   });
 
-  it("builds payload for multiple rows", () => {
+  it('builds payload for multiple rows', () => {
     const rows: readonly RowEntry[] = [
-      { index: 2, data: ["Alice", "alice@example.com"] },
-      { index: 3, data: ["Bob", "bob@example.com"] },
+      { index: 2, data: ['Alice', 'alice@example.com'] },
+      { index: 3, data: ['Bob', 'bob@example.com'] },
     ];
-    const result = buildSlackPayload(rows, "C01234567");
-    expect(result.channel).toBe("C01234567");
-    expect(result.text).toContain("Alice");
-    expect(result.text).toContain("Bob");
-    expect(result.text).toContain("2 件");
+    const result = buildSlackPayload(rows, 'C01234567');
+    expect(result.channel).toBe('C01234567');
+    expect(result.text).toContain('Alice');
+    expect(result.text).toContain('Bob');
+    expect(result.text).toContain('2 件');
   });
 
-  it("escapes special characters in data", () => {
+  it('escapes special characters in data', () => {
     const rows: readonly RowEntry[] = [
-      { index: 2, data: ["<script>alert('xss')</script>", "test"] },
+      { index: 2, data: ["<script>alert('xss')</script>", 'test'] },
     ];
-    const result = buildSlackPayload(rows, "C01234567");
-    expect(result.text).not.toContain("<script>");
-    expect(result.text).toContain("&lt;script&gt;");
+    const result = buildSlackPayload(rows, 'C01234567');
+    expect(result.text).not.toContain('<script>');
+    expect(result.text).toContain('&lt;script&gt;');
   });
 });
 ```
@@ -599,12 +613,13 @@ git commit -m "test: add slack-message test cases (RED)"
 ### Task 10: slack-message.ts — 実装（GREEN）
 
 **Files:**
+
 - Create: `src/slack-message.ts`
 
 - [ ] **Step 1: slack-message.ts を実装**
 
 ```typescript
-import type { RowEntry } from "./sheet-reader.js";
+import type { RowEntry } from './sheet-reader.js';
 
 export interface SlackPayload {
   readonly channel: string;
@@ -612,15 +627,12 @@ export interface SlackPayload {
 }
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function formatRow(row: RowEntry): string {
   const escaped = row.data.map(escapeHtml);
-  return `  Row ${row.index}: ${escaped.join(" | ")}`;
+  return `  Row ${row.index}: ${escaped.join(' | ')}`;
 }
 
 export function buildSlackPayload(
@@ -629,10 +641,10 @@ export function buildSlackPayload(
 ): SlackPayload {
   const header =
     rows.length === 1
-      ? "Spreadsheet に新しい行が追加されました:"
+      ? 'Spreadsheet に新しい行が追加されました:'
       : `Spreadsheet に ${rows.length} 件の新しい行が追加されました:`;
 
-  const body = rows.map(formatRow).join("\n");
+  const body = rows.map(formatRow).join('\n');
 
   return {
     channel: channelId,
@@ -661,48 +673,49 @@ git commit -m "feat: implement Slack message builder (GREEN)"
 ### Task 11: index.ts — GAS エントリポイント
 
 **Files:**
+
 - Modify: `src/index.ts`
 
 - [ ] **Step 1: src/index.ts を書き換え**
 
 ```typescript
-import { extractNewRows } from "./sheet-reader.js";
-import { buildSlackPayload } from "./slack-message.js";
+import { extractNewRows } from './sheet-reader.js';
+import { buildSlackPayload } from './slack-message.js';
 
 function checkNewRows(): void {
   const props = PropertiesService.getScriptProperties();
-  const token = props.getProperty("SLACK_BOT_TOKEN");
-  const channelId = props.getProperty("SLACK_CHANNEL_ID");
+  const token = props.getProperty('SLACK_BOT_TOKEN');
+  const channelId = props.getProperty('SLACK_CHANNEL_ID');
 
   if (!token || !channelId) {
     throw new Error(
-      "Slack config not set. Run setSlackConfig(token, channelId) first.",
+      'Slack config not set. Run setSlackConfig(token, channelId) first.',
     );
   }
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const allRows = sheet.getDataRange().getValues() as string[][];
-  const lastProcessed = Number(props.getProperty("LAST_PROCESSED_ROW") ?? "1");
+  const lastProcessed = Number(props.getProperty('LAST_PROCESSED_ROW') ?? '1');
 
   const newRows = extractNewRows(allRows, lastProcessed);
   if (newRows.length === 0) return;
 
   const payload = buildSlackPayload(newRows, channelId);
 
-  UrlFetchApp.fetch("https://slack.com/api/chat.postMessage", {
-    method: "post",
-    contentType: "application/json",
+  UrlFetchApp.fetch('https://slack.com/api/chat.postMessage', {
+    method: 'post',
+    contentType: 'application/json',
     headers: { Authorization: `Bearer ${token}` },
     payload: JSON.stringify(payload),
   });
 
-  props.setProperty("LAST_PROCESSED_ROW", String(allRows.length));
+  props.setProperty('LAST_PROCESSED_ROW', String(allRows.length));
 }
 
 function setSlackConfig(token: string, channelId: string): void {
   const props = PropertiesService.getScriptProperties();
-  props.setProperty("SLACK_BOT_TOKEN", token);
-  props.setProperty("SLACK_CHANNEL_ID", channelId);
+  props.setProperty('SLACK_BOT_TOKEN', token);
+  props.setProperty('SLACK_CHANNEL_ID', channelId);
 }
 ```
 
@@ -759,25 +772,26 @@ git push origin main
 
 ### File Map
 
-| Action | Path | Responsibility |
-|--------|------|----------------|
-| Modify | `src/index.ts` | GAS エントリ: `doGet()`, `doPost(e)` |
-| Create | `src/form-validator.ts` | フォーム入力バリデーション（純粋関数） |
-| Create | `src/mail-builder.ts` | メール件名・本文構築（純粋関数） |
+| Action | Path                             | Responsibility                               |
+| ------ | -------------------------------- | -------------------------------------------- |
+| Modify | `src/index.ts`                   | GAS エントリ: `doGet()`, `doPost(e)`         |
+| Create | `src/form-validator.ts`          | フォーム入力バリデーション（純粋関数）       |
+| Create | `src/mail-builder.ts`            | メール件名・本文構築（純粋関数）             |
 | Modify | `src/app.html` → `src/form.html` | お問い合わせフォーム（AJAX 送信 + 結果表示） |
-| Delete | `src/greeting.ts` | テンプレートのサンプル削除 |
-| Delete | `test/greeting.test.ts` | テンプレートのサンプルテスト削除 |
-| Create | `test/form-validator.test.ts` | バリデーションのテスト |
-| Create | `test/mail-builder.test.ts` | メール構築のテスト |
-| Modify | `appsscript.json` | `oauthScopes` に `gmail.send` |
-| Modify | `package.json` | `name` 変更 |
-| Modify | `README.md` | プロジェクト固有の説明 |
+| Delete | `src/greeting.ts`                | テンプレートのサンプル削除                   |
+| Delete | `test/greeting.test.ts`          | テンプレートのサンプルテスト削除             |
+| Create | `test/form-validator.test.ts`    | バリデーションのテスト                       |
+| Create | `test/mail-builder.test.ts`      | メール構築のテスト                           |
+| Modify | `appsscript.json`                | `oauthScopes` に `gmail.send`                |
+| Modify | `package.json`                   | `name` 変更                                  |
+| Modify | `README.md`                      | プロジェクト固有の説明                       |
 
 ---
 
 ### Task 13: リポジトリ作成と初期クリーンアップ
 
 **Files:**
+
 - Create: リポジトリ `h13/apps-script-form-mailer` from template
 - Delete: `src/greeting.ts`, `test/greeting.test.ts`
 - Modify: `src/app.html` → `src/form.html`, `package.json`, `appsscript.json`
@@ -820,9 +834,7 @@ build スクリプトはそのまま（`cp src/*.html dist/` で `form.html` と
     "access": "ANYONE",
     "executeAs": "USER_DEPLOYING"
   },
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/gmail.send"
-  ]
+  "oauthScopes": ["https://www.googleapis.com/auth/gmail.send"]
 }
 ```
 
@@ -844,78 +856,79 @@ git commit -m "chore: clean up template for form mailer project"
 ### Task 14: form-validator.ts — テスト作成（RED）
 
 **Files:**
+
 - Create: `test/form-validator.test.ts`
 
 - [ ] **Step 1: テストファイルを作成**
 
 ```typescript
-import { validateFormInput } from "../src/form-validator.js";
+import { validateFormInput } from '../src/form-validator.js';
 
-describe("validateFormInput", () => {
-  it("returns valid for correct input", () => {
+describe('validateFormInput', () => {
+  it('returns valid for correct input', () => {
     const result = validateFormInput({
-      name: "Taro Yamada",
-      email: "taro@example.com",
-      body: "This is a test message.",
+      name: 'Taro Yamada',
+      email: 'taro@example.com',
+      body: 'This is a test message.',
     });
     expect(result).toEqual({ valid: true, errors: [] });
   });
 
-  it("returns error when name is empty", () => {
+  it('returns error when name is empty', () => {
     const result = validateFormInput({
-      name: "",
-      email: "taro@example.com",
-      body: "Message",
+      name: '',
+      email: 'taro@example.com',
+      body: 'Message',
     });
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("名前は必須です");
+    expect(result.errors).toContain('名前は必須です');
   });
 
-  it("returns error when email is empty", () => {
+  it('returns error when email is empty', () => {
     const result = validateFormInput({
-      name: "Taro",
-      email: "",
-      body: "Message",
+      name: 'Taro',
+      email: '',
+      body: 'Message',
     });
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("メールアドレスは必須です");
+    expect(result.errors).toContain('メールアドレスは必須です');
   });
 
-  it("returns error when email format is invalid", () => {
+  it('returns error when email format is invalid', () => {
     const result = validateFormInput({
-      name: "Taro",
-      email: "not-an-email",
-      body: "Message",
+      name: 'Taro',
+      email: 'not-an-email',
+      body: 'Message',
     });
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("メールアドレスの形式が正しくありません");
+    expect(result.errors).toContain('メールアドレスの形式が正しくありません');
   });
 
-  it("returns error when body is empty", () => {
+  it('returns error when body is empty', () => {
     const result = validateFormInput({
-      name: "Taro",
-      email: "taro@example.com",
-      body: "",
+      name: 'Taro',
+      email: 'taro@example.com',
+      body: '',
     });
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("お問い合わせ内容は必須です");
+    expect(result.errors).toContain('お問い合わせ内容は必須です');
   });
 
-  it("returns multiple errors when multiple fields are invalid", () => {
+  it('returns multiple errors when multiple fields are invalid', () => {
     const result = validateFormInput({
-      name: "",
-      email: "",
-      body: "",
+      name: '',
+      email: '',
+      body: '',
     });
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(3);
   });
 
-  it("trims whitespace from inputs", () => {
+  it('trims whitespace from inputs', () => {
     const result = validateFormInput({
-      name: "  Taro  ",
-      email: "  taro@example.com  ",
-      body: "  Message  ",
+      name: '  Taro  ',
+      email: '  taro@example.com  ',
+      body: '  Message  ',
     });
     expect(result.valid).toBe(true);
   });
@@ -942,6 +955,7 @@ git commit -m "test: add form-validator test cases (RED)"
 ### Task 15: form-validator.ts — 実装（GREEN）
 
 **Files:**
+
 - Create: `src/form-validator.ts`
 
 - [ ] **Step 1: form-validator.ts を実装**
@@ -967,18 +981,18 @@ export function validateFormInput(input: FormInput): ValidationResult {
   const email = input.email.trim();
   const body = input.body.trim();
 
-  if (name === "") {
-    errors.push("名前は必須です");
+  if (name === '') {
+    errors.push('名前は必須です');
   }
 
-  if (email === "") {
-    errors.push("メールアドレスは必須です");
+  if (email === '') {
+    errors.push('メールアドレスは必須です');
   } else if (!EMAIL_PATTERN.test(email)) {
-    errors.push("メールアドレスの形式が正しくありません");
+    errors.push('メールアドレスの形式が正しくありません');
   }
 
-  if (body === "") {
-    errors.push("お問い合わせ内容は必須です");
+  if (body === '') {
+    errors.push('お問い合わせ内容は必須です');
   }
 
   return { valid: errors.length === 0, errors };
@@ -1005,62 +1019,63 @@ git commit -m "feat: implement form input validation (GREEN)"
 ### Task 16: mail-builder.ts — テスト作成（RED）
 
 **Files:**
+
 - Create: `test/mail-builder.test.ts`
 
 - [ ] **Step 1: テストファイルを作成**
 
 ```typescript
-import { buildMailOptions } from "../src/mail-builder.js";
+import { buildMailOptions } from '../src/mail-builder.js';
 
-describe("buildMailOptions", () => {
+describe('buildMailOptions', () => {
   const input = {
-    name: "Taro Yamada",
-    email: "taro@example.com",
-    body: "This is a test inquiry.",
+    name: 'Taro Yamada',
+    email: 'taro@example.com',
+    body: 'This is a test inquiry.',
   };
 
-  it("sets recipient to the admin email", () => {
-    const result = buildMailOptions(input, "admin@example.com");
-    expect(result.to).toBe("admin@example.com");
+  it('sets recipient to the admin email', () => {
+    const result = buildMailOptions(input, 'admin@example.com');
+    expect(result.to).toBe('admin@example.com');
   });
 
-  it("includes sender name in subject", () => {
-    const result = buildMailOptions(input, "admin@example.com");
-    expect(result.subject).toContain("Taro Yamada");
+  it('includes sender name in subject', () => {
+    const result = buildMailOptions(input, 'admin@example.com');
+    expect(result.subject).toContain('Taro Yamada');
   });
 
-  it("includes all form fields in HTML body", () => {
-    const result = buildMailOptions(input, "admin@example.com");
-    expect(result.htmlBody).toContain("Taro Yamada");
-    expect(result.htmlBody).toContain("taro@example.com");
-    expect(result.htmlBody).toContain("This is a test inquiry.");
+  it('includes all form fields in HTML body', () => {
+    const result = buildMailOptions(input, 'admin@example.com');
+    expect(result.htmlBody).toContain('Taro Yamada');
+    expect(result.htmlBody).toContain('taro@example.com');
+    expect(result.htmlBody).toContain('This is a test inquiry.');
   });
 
-  it("sets replyTo to sender email", () => {
-    const result = buildMailOptions(input, "admin@example.com");
-    expect(result.replyTo).toBe("taro@example.com");
+  it('sets replyTo to sender email', () => {
+    const result = buildMailOptions(input, 'admin@example.com');
+    expect(result.replyTo).toBe('taro@example.com');
   });
 
-  it("converts newlines to <br> in body", () => {
+  it('converts newlines to <br> in body', () => {
     const multiline = {
-      name: "Taro",
-      email: "taro@example.com",
-      body: "Line 1\nLine 2\nLine 3",
+      name: 'Taro',
+      email: 'taro@example.com',
+      body: 'Line 1\nLine 2\nLine 3',
     };
-    const result = buildMailOptions(multiline, "admin@example.com");
-    expect(result.htmlBody).toContain("Line 1<br>Line 2<br>Line 3");
+    const result = buildMailOptions(multiline, 'admin@example.com');
+    expect(result.htmlBody).toContain('Line 1<br>Line 2<br>Line 3');
   });
 
-  it("escapes HTML in user input", () => {
+  it('escapes HTML in user input', () => {
     const malicious = {
       name: '<script>alert("xss")</script>',
-      email: "attacker@example.com",
+      email: 'attacker@example.com',
       body: '<img src="x" onerror="alert(1)">',
     };
-    const result = buildMailOptions(malicious, "admin@example.com");
-    expect(result.htmlBody).not.toContain("<script>");
-    expect(result.htmlBody).not.toContain("<img");
-    expect(result.htmlBody).toContain("&lt;script&gt;");
+    const result = buildMailOptions(malicious, 'admin@example.com');
+    expect(result.htmlBody).not.toContain('<script>');
+    expect(result.htmlBody).not.toContain('<img');
+    expect(result.htmlBody).toContain('&lt;script&gt;');
   });
 });
 ```
@@ -1085,6 +1100,7 @@ git commit -m "test: add mail-builder test cases (RED)"
 ### Task 17: mail-builder.ts — 実装（GREEN）
 
 **Files:**
+
 - Create: `src/mail-builder.ts`
 
 - [ ] **Step 1: mail-builder.ts を実装**
@@ -1105,10 +1121,10 @@ export interface MailOptions {
 
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function buildMailOptions(
@@ -1123,12 +1139,12 @@ export function buildMailOptions(
     to: adminEmail,
     subject: `お問い合わせ: ${input.name.trim()}`,
     htmlBody: [
-      "<h2>お問い合わせがありました</h2>",
+      '<h2>お問い合わせがありました</h2>',
       `<p><strong>名前:</strong> ${name}</p>`,
       `<p><strong>メール:</strong> ${escapeHtml(email)}</p>`,
       `<p><strong>内容:</strong></p>`,
-      `<p>${body.replace(/\n/g, "<br>")}</p>`,
-    ].join("\n"),
+      `<p>${body.replace(/\n/g, '<br>')}</p>`,
+    ].join('\n'),
     replyTo: email,
   };
 }
@@ -1154,6 +1170,7 @@ git commit -m "feat: implement mail options builder (GREEN)"
 ### Task 18: HTML ファイル作成
 
 **Files:**
+
 - Modify: `src/form.html` (renamed from `src/app.html`)
 - Create: `src/result.html`
 
@@ -1257,36 +1274,36 @@ git commit -m "feat: implement mail options builder (GREEN)"
 
     <script>
       document
-        .getElementById("contact-form")
-        .addEventListener("submit", function (e) {
+        .getElementById('contact-form')
+        .addEventListener('submit', function (e) {
           e.preventDefault();
-          var btn = document.getElementById("submit-btn");
+          var btn = document.getElementById('submit-btn');
           btn.disabled = true;
-          btn.textContent = "送信中...";
+          btn.textContent = '送信中...';
           var formData = {
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value,
-            body: document.getElementById("body").value,
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            body: document.getElementById('body').value,
           };
           google.script.run
             .withSuccessHandler(function (res) {
-              var el = document.getElementById("result");
-              el.className = "result " + res.status;
+              var el = document.getElementById('result');
+              el.className = 'result ' + res.status;
               el.textContent = res.message;
-              el.style.display = "block";
+              el.style.display = 'block';
               btn.disabled = false;
-              btn.textContent = "送信";
-              if (res.status === "success") {
-                document.getElementById("contact-form").reset();
+              btn.textContent = '送信';
+              if (res.status === 'success') {
+                document.getElementById('contact-form').reset();
               }
             })
             .withFailureHandler(function (err) {
-              var el = document.getElementById("result");
-              el.className = "result error";
-              el.textContent = "エラーが発生しました: " + err.message;
-              el.style.display = "block";
+              var el = document.getElementById('result');
+              el.className = 'result error';
+              el.textContent = 'エラーが発生しました: ' + err.message;
+              el.style.display = 'block';
               btn.disabled = false;
-              btn.textContent = "送信";
+              btn.textContent = '送信';
             })
             .submitForm(formData);
         });
@@ -1317,24 +1334,25 @@ git commit -m "feat: add contact form HTML template"
 ### Task 19: index.ts — GAS エントリポイント
 
 **Files:**
+
 - Modify: `src/index.ts`
 
 - [ ] **Step 1: src/index.ts を書き換え**
 
 ```typescript
-import { validateFormInput } from "./form-validator.js";
-import { buildMailOptions } from "./mail-builder.js";
+import { validateFormInput } from './form-validator.js';
+import { buildMailOptions } from './mail-builder.js';
 
 interface SubmitResult {
-  readonly status: "success" | "error";
+  readonly status: 'success' | 'error';
   readonly message: string;
 }
 
-const ADMIN_EMAIL = "admin@example.com";
+const ADMIN_EMAIL = 'admin@example.com';
 
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createHtmlOutputFromFile("form")
-    .setTitle("お問い合わせ")
+  return HtmlService.createHtmlOutputFromFile('form')
+    .setTitle('お問い合わせ')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -1346,18 +1364,18 @@ function submitForm(formData: {
   const validation = validateFormInput(formData);
 
   if (!validation.valid) {
-    return { status: "error", message: validation.errors.join("、") };
+    return { status: 'error', message: validation.errors.join('、') };
   }
 
   const mailOptions = buildMailOptions(formData, ADMIN_EMAIL);
-  GmailApp.sendEmail(mailOptions.to, mailOptions.subject, "", {
+  GmailApp.sendEmail(mailOptions.to, mailOptions.subject, '', {
     htmlBody: mailOptions.htmlBody,
     replyTo: mailOptions.replyTo,
   });
 
   return {
-    status: "success",
-    message: "お問い合わせを送信しました。ありがとうございます。",
+    status: 'success',
+    message: 'お問い合わせを送信しました。ありがとうございます。',
   };
 }
 ```
