@@ -46,11 +46,11 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 | カテゴリ   | ツール                                                 |
 | ---------- | ------------------------------------------------------ |
-| 言語       | TypeScript（strict モード）                            |
+| 言語       | TypeScript 7（strict モード）                          |
 | バンドラ   | Rollup（GAS 互換出力）                                 |
 | デプロイ   | clasp（dev / prod 環境）                               |
 | テスト     | Jest（カバレッジ閾値 80%）                             |
-| リント     | ESLint, Prettier, Stylelint, HTMLHint                  |
+| リント     | Oxlint, Oxfmt, Stylelint, HTMLHint                     |
 | Git フック | husky + lint-staged                                    |
 | CI/CD      | GitHub Actions + GitLab CI（PR で CI、マージで CD）    |
 | 依存管理   | Renovate（自動更新 + オートマージ）                    |
@@ -134,7 +134,7 @@ GCP プロジェクト統合が設定されている場合、デプロイ時に 
 
 1. **`SCRIPT_PROPERTIES`** を CI/CD シークレットとして設定（環境ごとの JSON 文字列）：
    ```json
-   {"API_KEY":"xxx","SLACK_WEBHOOK":"https://hooks.slack.com/..."}
+   { "API_KEY": "xxx", "SLACK_WEBHOOK": "https://hooks.slack.com/..." }
    ```
 2. `GCP_PROJECT_NUMBER` と `SCRIPT_PROPERTIES` の両方が設定されている場合、`clasp deploy` 後に自動的にプロパティが注入されます
 3. hook ベースの代替方法は `.github/hooks/post-deploy.sh.example` または `.gitlab/post-deploy.yml.example` を参照
@@ -206,7 +206,8 @@ your-project/
 ├── rollup.config.mjs
 ├── tsconfig.json
 ├── jest.config.json
-├── eslint.config.mjs
+├── .oxlintrc.json
+├── .oxfmtrc.json
 ├── renovate.json          # 自動更新設定
 └── .templatesyncignore    # プロジェクト固有のコードは上書きされない
 ```

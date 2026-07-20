@@ -98,12 +98,12 @@ pnpm install
 
 Settings → CI/CD → Variables で以下を追加：
 
-| 変数            | Environment scope | 値                                                                 | オプション |
-| --------------- | ----------------- | ------------------------------------------------------------------ | ---------- |
-| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     | Masked     |
-| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    | Masked     |
-| `DEPLOYMENT_ID` | `development`     | dev のデプロイメント ID                                            |            |
-| `DEPLOYMENT_ID` | `production`      | prod のデプロイメント ID                                           |            |
+| 変数            | Environment scope | 値                                                              | オプション |
+| --------------- | ----------------- | --------------------------------------------------------------- | ---------- |
+| `CLASP_JSON`    | `development`     | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`  | Masked     |
+| `CLASP_JSON`    | `production`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}` | Masked     |
+| `DEPLOYMENT_ID` | `development`     | dev のデプロイメント ID                                         |            |
+| `DEPLOYMENT_ID` | `production`      | prod のデプロイメント ID                                        |            |
 
 > **GCP プロジェクト統合時**: `CLASP_JSON` に `"projectId":"プロジェクト番号"` を追加します（例: `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`）。`init.sh --gcp-project` 使用時は自動設定されます。
 
@@ -127,16 +127,16 @@ pnpm run check    # lint + 型チェック + テスト
 
 **User Projects:**
 
-| ジョブ          | 必要な外部通信先                                          |
-| --------------- | --------------------------------------------------------- |
-| `check`         | npm レジストリのみ（`pnpm install` 用）                   |
-| `deploy_*`      | `script.google.com`（HTTPS）                              |
-| `template_sync` | Template Project（社内 GitLab、Group Variable 経由）       |
+| ジョブ          | 必要な外部通信先                                     |
+| --------------- | ---------------------------------------------------- |
+| `check`         | npm レジストリのみ（`pnpm install` 用）              |
+| `deploy_*`      | `script.google.com`（HTTPS）                         |
+| `template_sync` | Template Project（社内 GitLab、Group Variable 経由） |
 
 **Template Project:**
 
-| ジョブ          | 必要な外部通信先                                                            |
-| --------------- | --------------------------------------------------------------------------- |
+| ジョブ          | 必要な外部通信先                                                           |
+| --------------- | -------------------------------------------------------------------------- |
 | `template_sync` | `github.com`（デフォルト）または社内ミラー（`TEMPLATE_REPO_URL` 上書き時） |
 
 User Project の Runner は `github.com` への接続が不要です。外部アクセス（または社内ミラー）が必要なのは Template Project の Runner のみです。
@@ -162,13 +162,13 @@ GitLab Free tier では「Create from template」（Group project templates）�
 
 オプション：
 
-| フラグ            | 説明                                         | デフォルト       |
-| ----------------- | -------------------------------------------- | ---------------- |
-| `--group`         | GitLab group または namespace（必須）         |                  |
-| `--name`          | リポジトリ名（必須）                          |                  |
-| `--hostname`      | GitLab ホスト名                               | 自動検出         |
-| `--visibility`    | `private`、`internal`、`public`               | `private`        |
-| `--description`   | プロジェクトの説明                            |                  |
+| フラグ          | 説明                                  | デフォルト |
+| --------------- | ------------------------------------- | ---------- |
+| `--group`       | GitLab group または namespace（必須） |            |
+| `--name`        | リポジトリ名（必須）                  |            |
+| `--hostname`    | GitLab ホスト名                       | 自動検出   |
+| `--visibility`  | `private`、`internal`、`public`       | `private`  |
+| `--description` | プロジェクトの説明                    |            |
 
 ### 2. GAS プロジェクトの初期化と CI/CD 設定
 

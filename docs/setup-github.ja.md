@@ -42,12 +42,12 @@ pnpm install
 
 ### 3. GitHub Environments の設定
 
-| Environment   | Secret / Variable         | 値                                                                 |
-| ------------- | ------------------------- | ------------------------------------------------------------------ |
-| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`     |
-| `development` | Variable: `DEPLOYMENT_ID` | dev のデプロイメント ID                                            |
-| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}`    |
-| `production`  | Variable: `DEPLOYMENT_ID` | prod のデプロイメント ID                                           |
+| Environment   | Secret / Variable         | 値                                                              |
+| ------------- | ------------------------- | --------------------------------------------------------------- |
+| `development` | Secret: `CLASP_JSON`      | `{"scriptId":"DEV_ID","projectId":"GCP_NUM","rootDir":"dist"}`  |
+| `development` | Variable: `DEPLOYMENT_ID` | dev のデプロイメント ID                                         |
+| `production`  | Secret: `CLASP_JSON`      | `{"scriptId":"PROD_ID","projectId":"GCP_NUM","rootDir":"dist"}` |
+| `production`  | Variable: `DEPLOYMENT_ID` | prod のデプロイメント ID                                        |
 
 > **GCP プロジェクト統合時**: `CLASP_JSON` に `"projectId":"プロジェクト番号"` を追加します（例: `{"scriptId":"...","rootDir":"dist","projectId":"123456789"}`）。`init.sh --gcp-project` 使用時は自動設定されます。
 

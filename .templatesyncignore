@@ -18,11 +18,12 @@
 :!.gitlab/sync-template.yml
 
 # Build & tooling
-:!eslint.config.mjs
+:!.oxlintrc.json
+:!.oxfmtrc.json
 :!rollup.config.mjs
 :!tsconfig.json
 :!package.json
-:!.prettierrc
+:!pnpm-workspace.yaml
 :!.htmlhintrc
 :!.stylelintrc.json
 :!.editorconfig

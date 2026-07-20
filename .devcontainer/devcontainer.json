@@ -7,11 +7,7 @@
   "postCreateCommand": "corepack enable && pnpm install",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "stylelint.vscode-stylelint"
-      ]
+      "extensions": ["oxc.oxc-vscode", "stylelint.vscode-stylelint"]
     }
   }
 }

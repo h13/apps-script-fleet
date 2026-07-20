@@ -45,11 +45,11 @@ Spreadsheet カスタム関数 — 日本ビジネス向けデータ検証。セ
 
 ### Functions
 
-| カスタム関数 | 説明 |
-|------------|------|
-| `=IS_VALID_EMAIL(value)` | メールアドレス形式チェック |
-| `=IS_VALID_PHONE_JP(value)` | 日本の電話番号形式チェック（固定・携帯・フリーダイヤル） |
-| `=IS_VALID_POSTAL_CODE(value)` | 郵便番号形式チェック（ハイフンあり/なし対応） |
+| カスタム関数                   | 説明                                                     |
+| ------------------------------ | -------------------------------------------------------- |
+| `=IS_VALID_EMAIL(value)`       | メールアドレス形式チェック                               |
+| `=IS_VALID_PHONE_JP(value)`    | 日本の電話番号形式チェック（固定・携帯・フリーダイヤル） |
+| `=IS_VALID_POSTAL_CODE(value)` | 郵便番号形式チェック（ハイフンあり/なし対応）            |
 
 ### File Structure
 
@@ -165,17 +165,17 @@ appsscript.json           — oauthScopes: [gmail.send]
 
 ## Coverage Matrix
 
-| テンプレート機能 | custom-functions | slack-notifier | form-mailer |
-|----------------|:---:|:---:|:---:|
-| ロジック分離 (index.ts → modules) | o | o | o |
-| 純粋関数テスト 80%+ | o | o | o |
-| export なしエントリポイント | o | o | o |
-| HTML + Stylelint/HTMLHint | | | o |
-| 外部 API (UrlFetchApp) | | o | |
-| 状態管理 (PropertiesService) | | o | |
-| Web App (doGet/doPost) | | | o |
-| カスタム関数 | o | | |
-| トリガー駆動 | | o | |
+| テンプレート機能                  | custom-functions | slack-notifier | form-mailer |
+| --------------------------------- | :--------------: | :------------: | :---------: |
+| ロジック分離 (index.ts → modules) |        o         |       o        |      o      |
+| 純粋関数テスト 80%+               |        o         |       o        |      o      |
+| export なしエントリポイント       |        o         |       o        |      o      |
+| HTML + Stylelint/HTMLHint         |                  |                |      o      |
+| 外部 API (UrlFetchApp)            |                  |       o        |             |
+| 状態管理 (PropertiesService)      |                  |       o        |             |
+| Web App (doGet/doPost)            |                  |                |      o      |
+| カスタム関数                      |        o         |                |             |
+| トリガー駆動                      |                  |       o        |             |
 
 ## Implementation Order
 

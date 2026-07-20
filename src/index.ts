@@ -1,9 +1,9 @@
-import { getGreeting } from "./greeting.js";
-import { setScriptProperties } from "./setProperties.js";
+import { getGreeting } from './greeting.js';
+import { setScriptProperties } from './setProperties.js';
 
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createHtmlOutputFromFile("app")
-    .setTitle("GAS Web App")
+  return HtmlService.createHtmlOutputFromFile('app')
+    .setTitle('GAS Web App')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
