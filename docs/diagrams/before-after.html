@@ -1,0 +1,340 @@
+<!doctype html>
+<!--
+  Source for docs/before-after.png (960x400).
+  Regenerate: ./docs/diagrams/render.sh
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 960px;
+        height: 400px;
+        overflow: hidden;
+      }
+
+      body {
+        background: #0d1117;
+        font-family: 'DejaVu Sans Mono', monospace;
+        color: #e6edf3;
+        position: relative;
+      }
+
+      svg.wires {
+        position: absolute;
+        inset: 0;
+      }
+
+      .heading {
+        position: absolute;
+        top: 18px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .chaos {
+        position: absolute;
+        border-radius: 6px;
+        background: #10151d;
+        padding: 9px 12px;
+        min-width: 100px;
+      }
+
+      .chaos .name {
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .chaos .sub {
+        font-size: 10px;
+        margin-top: 12px;
+        color: #8b949e;
+      }
+
+      .vs {
+        position: absolute;
+        left: 461px;
+        top: 181px;
+        width: 38px;
+        height: 38px;
+        border: 1.5px solid #30363d;
+        border-radius: 50%;
+        background: #0d1117;
+        color: #6e7681;
+        font-size: 12px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .stamp {
+        position: absolute;
+        border-radius: 6px;
+        padding: 6px 14px;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .stamp .big {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .stamp .small {
+        font-size: 12px;
+      }
+
+      .fleet {
+        position: absolute;
+        left: 635px;
+        top: 50px;
+        width: 160px;
+        height: 38px;
+        white-space: nowrap;
+        border: 1.5px solid #2f81f7;
+        border-left: 4px solid #2f81f7;
+        border-radius: 6px;
+        background: #0d1b2e;
+        color: #58a6ff;
+        font-weight: bold;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+      }
+
+      .tidy {
+        position: absolute;
+        width: 145px;
+        height: 34px;
+        border: 1.5px solid #238636;
+        border-radius: 6px;
+        background: #0f1d14;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 7px 0 9px;
+        white-space: nowrap;
+      }
+
+      .tidy .name {
+        font-weight: bold;
+        font-size: 11px;
+      }
+
+      .badge {
+        display: inline-block;
+        border-radius: 3px;
+        padding: 1px 3px;
+        font-size: 8px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .ci {
+        background: #238636;
+      }
+
+      .cd {
+        background: #8957e5;
+      }
+
+      .orgbar {
+        position: absolute;
+        left: 570px;
+        top: 314px;
+        width: 276px;
+        height: 26px;
+        border: 1.5px solid #238636;
+        border-radius: 6px;
+        background: #0f1d14;
+        color: #7ee787;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="wires" width="960" height="400">
+      <!-- tangled dependency lines on the chaos side -->
+      <g stroke="#57191d" stroke-width="1" opacity="0.7">
+        <line x1="113" y1="90" x2="318" y2="207" />
+        <line x1="145" y1="207" x2="260" y2="103" />
+        <line x1="87" y1="323" x2="370" y2="81" />
+        <line x1="207" y1="289" x2="145" y2="180" />
+        <line x1="318" y1="183" x2="87" y2="90" />
+        <line x1="260" y1="131" x2="340" y2="310" />
+        <line x1="37" y1="310" x2="207" y2="273" />
+      </g>
+      <line
+        x1="480"
+        y1="10"
+        x2="480"
+        y2="390"
+        stroke="#21262d"
+        stroke-width="1.5"
+        stroke-dasharray="4 5"
+      />
+      <!-- fleet -> repo grid -->
+      <path
+        d="M716 88 V104 M636 104 H796 M636 104 V115 M796 104 V115"
+        stroke="#30363d"
+        stroke-width="1.5"
+        fill="none"
+      />
+    </svg>
+
+    <div class="heading" style="left: 40px; color: #f85149">Without</div>
+    <div class="heading" style="left: 510px; color: #3fb950">
+      With Apps Script Fleet
+    </div>
+
+    <div
+      class="chaos"
+      style="left: 57px; top: 68px; border: 1.5px solid #da3633"
+    >
+      <div class="name" style="color: #ff7b72">slack-bot</div>
+      <div class="sub">no CI</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 205px; top: 92px; border: 1.5px solid #bb8009"
+    >
+      <div class="name" style="color: #e3b341">reports</div>
+      <div class="sub" style="color: #d29922">manual</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 310px; top: 55px; border: 1.5px solid #da3633"
+    >
+      <div class="name" style="color: #ffa198">sync-tool</div>
+      <div class="sub">yarn</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 85px; top: 183px; border: 1.5px solid #30363d"
+    >
+      <div class="name" style="color: #c9d1d9">forms</div>
+      <div class="sub" style="color: #f85149">broken</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 262px; top: 172px; border: 1.5px solid #da3633"
+    >
+      <div class="name" style="color: #ff7b72">cleanup</div>
+      <div class="sub">none</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 150px; top: 263px; border: 1.5px solid #30363d"
+    >
+      <div class="name" style="color: #c9d1d9">mailer</div>
+      <div class="sub">npm</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 280px; top: 282px; border: 1.5px solid #bb8009"
+    >
+      <div class="name" style="color: #e3b341">export</div>
+      <div class="sub">???</div>
+    </div>
+    <div
+      class="chaos"
+      style="left: 30px; top: 310px; border: 1.5px solid #21262d; opacity: 0.8"
+    >
+      <div class="name" style="color: #6e7681">dashboard</div>
+      <div class="sub" style="color: #484f58">pnpm</div>
+    </div>
+
+    <div
+      class="stamp"
+      style="
+        left: 60px;
+        top: 347px;
+        background: #4d1114;
+        border: 1.5px solid #da3633;
+      "
+    >
+      <span class="big" style="color: #ff7b72">2-4 hrs</span>
+      <span class="small" style="color: #ffa198">/ project</span>
+    </div>
+
+    <div class="vs">vs</div>
+
+    <div class="fleet">apps-script-fleet</div>
+
+    <div class="tidy" style="left: 565px; top: 115px">
+      <span class="name">slack-notify</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 715px; top: 115px">
+      <span class="name">sheet-report</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 565px; top: 163px">
+      <span class="name">form-handler</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 715px; top: 163px">
+      <span class="name">drive-cleanup</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 565px; top: 211px">
+      <span class="name">mailer</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 715px; top: 211px">
+      <span class="name">sync-tool</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 565px; top: 259px">
+      <span class="name">dashboard</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+    <div class="tidy" style="left: 715px; top: 259px">
+      <span class="name">export</span>
+      <span
+        ><span class="badge ci">CI</span> <span class="badge cd">CD</span></span
+      >
+    </div>
+
+    <div class="orgbar">Org Secrets + Renovate + Template Sync</div>
+
+    <div
+      class="stamp"
+      style="
+        left: 800px;
+        top: 347px;
+        background: #0f2c17;
+        border: 1.5px solid #238636;
+      "
+    >
+      <span class="big" style="color: #3fb950">5 min</span>
+    </div>
+  </body>
+</html>

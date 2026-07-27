@@ -1,0 +1,327 @@
+<!doctype html>
+<!--
+  Source for docs/before-after-human.png (960x440).
+  Regenerate: ./docs/diagrams/render.sh
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 960px;
+        height: 440px;
+        overflow: hidden;
+      }
+
+      body {
+        background: #0d1117;
+        font-family: 'DejaVu Sans Mono', monospace;
+        color: #e6edf3;
+        position: relative;
+      }
+
+      svg.scene {
+        position: absolute;
+        inset: 0;
+      }
+
+      .heading {
+        position: absolute;
+        top: 18px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .chip {
+        position: absolute;
+        border-radius: 4px;
+        background: #10151d;
+        font-size: 10px;
+        padding: 4px 8px;
+      }
+
+      .vs {
+        position: absolute;
+        left: 461px;
+        top: 196px;
+        width: 38px;
+        height: 38px;
+        border: 1.5px solid #30363d;
+        border-radius: 50%;
+        background: #0d1117;
+        color: #6e7681;
+        font-size: 12px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .pill {
+        position: absolute;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 3px 9px;
+      }
+
+      .fleetbar {
+        position: absolute;
+        left: 522px;
+        top: 318px;
+        width: 336px;
+        height: 24px;
+        border: 1.5px solid #238636;
+        border-radius: 5px;
+        background: #0f1d14;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 10px;
+        font-size: 8px;
+        color: #8b949e;
+        white-space: nowrap;
+      }
+
+      .fleetbar .name {
+        color: #7ee787;
+        font-weight: bold;
+        font-size: 10px;
+      }
+
+      .result {
+        position: absolute;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .result-sub {
+        position: absolute;
+        font-size: 11px;
+        color: #8b949e;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="scene" width="960" height="440">
+      <line
+        x1="480"
+        y1="10"
+        x2="480"
+        y2="430"
+        stroke="#21262d"
+        stroke-width="1.5"
+        stroke-dasharray="4 5"
+      />
+
+      <!-- left: overwhelmed developer -->
+      <g>
+        <!-- monitor -->
+        <rect
+          x="147"
+          y="84"
+          width="140"
+          height="108"
+          rx="6"
+          fill="#1c0d0f"
+          stroke="#57191d"
+          stroke-width="1.5"
+        />
+        <g stroke="#a12e33" stroke-width="4" stroke-linecap="round">
+          <line x1="158" y1="98" x2="252" y2="98" />
+          <line x1="158" y1="110" x2="228" y2="110" />
+          <line x1="158" y1="122" x2="262" y2="122" />
+          <line x1="158" y1="134" x2="214" y2="134" />
+          <line x1="158" y1="146" x2="244" y2="146" />
+          <line x1="158" y1="158" x2="200" y2="158" />
+          <line x1="158" y1="170" x2="236" y2="170" />
+        </g>
+        <rect x="209" y="192" width="16" height="14" fill="#21262d" />
+        <!-- person, arms thrown out -->
+        <circle cx="217" cy="205" r="14" fill="#6e7681" />
+        <path
+          d="M217 219 C202 222 196 236 196 252 L238 252 C238 236 232 222 217 219 Z"
+          fill="#6e7681"
+        />
+        <g stroke="#6e7681" stroke-width="7" stroke-linecap="round">
+          <line x1="200" y1="230" x2="172" y2="243" />
+          <line x1="234" y1="230" x2="262" y2="243" />
+        </g>
+        <!-- desk -->
+        <rect x="88" y="258" width="252" height="7" rx="2" fill="#21262d" />
+        <rect x="100" y="265" width="6" height="60" fill="#191f27" />
+        <rect x="322" y="265" width="6" height="60" fill="#191f27" />
+      </g>
+
+      <!-- right: pairing with CI, shipping -->
+      <g>
+        <!-- monitor -->
+        <rect
+          x="580"
+          y="78"
+          width="180"
+          height="122"
+          rx="6"
+          fill="#0d1f13"
+          stroke="#1c4428"
+          stroke-width="1.5"
+        />
+        <g stroke="#2ea043" stroke-width="4" stroke-linecap="round">
+          <line x1="592" y1="93" x2="740" y2="93" />
+          <line x1="592" y1="105" x2="700" y2="105" />
+          <line x1="592" y1="117" x2="748" y2="117" />
+          <line x1="592" y1="129" x2="676" y2="129" />
+          <line x1="592" y1="141" x2="728" y2="141" />
+          <line x1="592" y1="153" x2="662" y2="153" />
+          <line x1="592" y1="165" x2="712" y2="165" />
+          <line x1="592" y1="177" x2="688" y2="177" />
+        </g>
+        <rect x="662" y="200" width="16" height="12" fill="#21262d" />
+        <!-- relaxed developer -->
+        <circle cx="656" cy="196" r="13" fill="#6e7681" />
+        <path
+          d="M656 209 C643 212 638 224 638 238 L674 238 C674 224 669 212 656 209 Z"
+          fill="#6e7681"
+        />
+        <text
+          x="692"
+          y="196"
+          fill="#3fb950"
+          font-size="15"
+          font-family="DejaVu Sans Mono, monospace"
+        >
+          +
+        </text>
+        <!-- automation buddy with glowing head -->
+        <circle cx="740" cy="198" r="12" fill="#1f6feb" opacity="0.9" />
+        <circle
+          cx="740"
+          cy="198"
+          r="17"
+          fill="none"
+          stroke="#58a6ff"
+          stroke-width="1.5"
+          stroke-dasharray="2 5"
+        />
+        <line
+          x1="740"
+          y1="181"
+          x2="740"
+          y2="174"
+          stroke="#58a6ff"
+          stroke-width="2"
+        />
+        <circle cx="740" cy="172" r="2.5" fill="#58a6ff" />
+        <path
+          d="M740 210 C728 213 723 224 723 236 L757 236 C757 224 752 213 740 210 Z"
+          fill="#31445f"
+        />
+        <g stroke="#31445f" stroke-width="6" stroke-linecap="round">
+          <line x1="727" y1="222" x2="706" y2="232" />
+          <line x1="753" y1="222" x2="774" y2="232" />
+        </g>
+        <!-- desk -->
+        <rect x="548" y="262" width="264" height="7" rx="2" fill="#21262d" />
+        <rect x="560" y="269" width="6" height="46" fill="#191f27" />
+        <rect x="794" y="269" width="6" height="46" fill="#191f27" />
+      </g>
+    </svg>
+
+    <div class="heading" style="left: 40px; color: #f85149">
+      A developer's day
+    </div>
+    <div class="heading" style="left: 510px; color: #3fb950">
+      Same day, with Apps Script Fleet
+    </div>
+
+    <div
+      class="chip"
+      style="left: 44px; top: 60px; border: 1px solid #bb8009; color: #e3b341"
+    >
+      tsconfig
+    </div>
+    <div
+      class="chip"
+      style="left: 300px; top: 62px; border: 1px solid #bb8009; color: #e3b341"
+    >
+      rollup
+    </div>
+    <div
+      class="chip"
+      style="left: 36px; top: 141px; border: 1px solid #bb8009; color: #d29922"
+    >
+      eslint
+    </div>
+    <div
+      class="chip"
+      style="left: 306px; top: 149px; border: 1px solid #da3633; color: #ff7b72"
+    >
+      .clasp
+    </div>
+    <div
+      class="chip"
+      style="left: 48px; top: 217px; border: 1px solid #bb8009; color: #e3b341"
+    >
+      jest
+    </div>
+    <div
+      class="chip"
+      style="left: 310px; top: 219px; border: 1px solid #da3633; color: #ff7b72"
+    >
+      ci.yml
+    </div>
+    <div
+      class="chip"
+      style="left: 76px; top: 312px; border: 1px solid #da3633; color: #ff7b72"
+    >
+      cd.yml
+    </div>
+    <div
+      class="chip"
+      style="left: 272px; top: 310px; border: 1px solid #bb8009; color: #e3b341"
+    >
+      prettier
+    </div>
+
+    <div class="vs">vs</div>
+
+    <div
+      class="pill"
+      style="left: 556px; top: 244px; border: 1px solid #238636; color: #3fb950"
+    >
+      CI pass
+    </div>
+    <div
+      class="pill"
+      style="left: 632px; top: 244px; background: #8957e5; color: #fff"
+    >
+      CD deploy
+    </div>
+
+    <div class="fleetbar">
+      <span class="name">apps-script-fleet</span>
+      <span>TypeScript&#8194;CI/CD&#8194;Renovate&#8194;Template Sync</span>
+    </div>
+
+    <div class="result" style="left: 85px; top: 358px; color: #f85149">
+      30 min of real work
+    </div>
+    <div class="result-sub" style="left: 85px; top: 384px">
+      out of an 8-hour day
+    </div>
+
+    <div class="result" style="left: 560px; top: 358px; color: #3fb950">
+      2 projects shipped
+    </div>
+    <div class="result-sub" style="left: 560px; top: 384px">
+      in the same day
+    </div>
+  </body>
+</html>
