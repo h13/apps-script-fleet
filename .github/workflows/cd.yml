@@ -90,7 +90,7 @@ jobs:
           printf '%s' "$CLASPRC" > ~/.clasprc.json
           printf '%s' "$CLASP_JSON" > .clasp.json
 
-      - name: Push to GAS
+      - name: Push to Apps Script
         run: pnpm exec clasp push -f
 
       - name: Deploy new version

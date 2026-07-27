@@ -12,8 +12,8 @@
 
 clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は Workload Identity Federation でキーレス取得します — 詳細: [secret-manager.ja.md](secret-manager.ja.md)。概要:
 
-1. CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
-2. WIF プール `gas-fleet` に `github` プロバイダを作成し、org に attribute 制限（`assertion.repository_owner == '<org>'` — GitHub の issuer はマルチテナントのため必須）。
+1. CI/CD 用の専用 Google アカウント（例: `apps-script-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
+2. WIF プール `apps-script-fleet` に `github` プロバイダを作成し、org に attribute 制限（`assertion.repository_owner == '<org>'` — GitHub の issuer はマルチテナントのため必須）。
 3. `principalSet://…/attribute.repository_owner/<org>` に `roles/secretmanager.secretAccessor` を付与。
 4. **Organization variables** `GCP_WIF_PROVIDER` と `CLASPRC_SECRET` を設定。
 
@@ -26,7 +26,7 @@ clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は
 
 </details>
 
-## プロジェクトごと：新しい GAS リポジトリの作成
+## プロジェクトごと：新しい Apps Script リポジトリの作成
 
 ### 1. テンプレートから作成
 

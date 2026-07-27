@@ -6,7 +6,7 @@ set -euo pipefail
 # Prerequisites:
 #   - ~/.clasprc.json exists
 #   - .clasp.json exists (with projectId for clasp run)
-#   - The GAS project is bound to a standard GCP project
+#   - The Apps Script project is bound to a standard GCP project
 #   - Apps Script API is enabled on the GCP project
 #
 # Usage:

@@ -13,7 +13,7 @@ set -euo pipefail
 #   ./scripts/init.sh [--title "Project Name"] [--type standalone|sheets|docs|slides|forms] [--gcp-project <PROJECT_NUMBER>]
 
 TITLE=""
-GAS_TYPE="standalone"
+SCRIPT_TYPE="standalone"
 GCP_PROJECT=""
 VALID_TYPES="standalone sheets docs slides forms"
 
@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --type)
-      GAS_TYPE="$2"
+      SCRIPT_TYPE="$2"
       shift 2
       ;;
     --gcp-project)
@@ -247,9 +247,9 @@ clasp_create_and_deploy() {
   local title="$1" env_label="$2"
   local full_title="${title} (${env_label})"
 
-  echo "Creating GAS project: ${full_title}..."
+  echo "Creating Apps Script project: ${full_title}..."
   rm -f .clasp.json
-  local clasp_args=(create --title "$full_title" --type "$GAS_TYPE" --rootDir dist)
+  local clasp_args=(create --title "$full_title" --type "$SCRIPT_TYPE" --rootDir dist)
   if [[ -n "$GCP_PROJECT" ]]; then
     clasp_args+=(--parentId "$GCP_PROJECT")
   fi
@@ -295,7 +295,7 @@ echo ""
 [[ -f "$HOME/.clasprc.json" ]] || die "$HOME/.clasprc.json not found. Run ./scripts/fetch-clasp-credentials.sh (Secret Manager), or copy it from your organization's password manager (legacy)."
 require_cmd pnpm
 require_cmd node
-validate_type "$GAS_TYPE"
+validate_type "$SCRIPT_TYPE"
 if [[ -n "$GCP_PROJECT" ]] && ! [[ "$GCP_PROJECT" =~ ^[0-9]+$ ]]; then
   die "--gcp-project must be a numeric project number (not project ID). Got: ${GCP_PROJECT}"
 fi
@@ -309,7 +309,7 @@ init_remote
 PLATFORM=$(detect_platform)
 echo "Platform: ${PLATFORM}"
 echo "Title: ${TITLE}"
-echo "Type: ${GAS_TYPE}"
+echo "Type: ${SCRIPT_TYPE}"
 if [[ -n "$GCP_PROJECT" ]]; then
   echo "GCP Project: ${GCP_PROJECT}"
 fi

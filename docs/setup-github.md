@@ -12,8 +12,8 @@
 
 Store the shared clasp credentials in Google Cloud Secret Manager and let CI fetch them keylessly via Workload Identity Federation — full guide: [secret-manager.md](secret-manager.md). In short:
 
-1. Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
-2. Create the WIF pool `gas-fleet` with a `github` provider, attribute-restricted to your org (`assertion.repository_owner == '<org>'` — required, the GitHub issuer is multi-tenant).
+1. Create a dedicated Google account for CI/CD (e.g., `apps-script-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
+2. Create the WIF pool `apps-script-fleet` with a `github` provider, attribute-restricted to your org (`assertion.repository_owner == '<org>'` — required, the GitHub issuer is multi-tenant).
 3. Grant `roles/secretmanager.secretAccessor` to `principalSet://…/attribute.repository_owner/<org>`.
 4. Set **Organization variables** `GCP_WIF_PROVIDER` and `CLASPRC_SECRET`.
 

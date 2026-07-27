@@ -4,7 +4,7 @@
 
 **Goal:** apps-script-fleet テンプレートから 3 つの実用的な example リポジトリを作成する
 
-**Architecture:** 各リポジトリはテンプレートから `gh repo create --template` で生成し、`src/`, `test/`, `appsscript.json` を書き換える。ビルド・CI/CD・lint 設定はテンプレートそのまま。GAS 固有 API は `src/index.ts` に閉じ込め、テスト可能な純粋関数を別モジュールに分離する。
+**Architecture:** 各リポジトリはテンプレートから `gh repo create --template` で生成し、`src/`, `test/`, `appsscript.json` を書き換える。ビルド・CI/CD・lint 設定はテンプレートそのまま。Apps Script 固有 API は `src/index.ts` に閉じ込め、テスト可能な純粋関数を別モジュールに分離する。
 
 **Tech Stack:** TypeScript, Jest (ts-jest), Rollup, ESLint, Google Apps Script types
 
@@ -18,7 +18,7 @@
 
 | Action | Path                             | Responsibility                                                                    |
 | ------ | -------------------------------- | --------------------------------------------------------------------------------- |
-| Modify | `src/index.ts`                   | GAS エントリ: `IS_VALID_EMAIL()`, `IS_VALID_PHONE_JP()`, `IS_VALID_POSTAL_CODE()` |
+| Modify | `src/index.ts`                   | Apps Script エントリ: `IS_VALID_EMAIL()`, `IS_VALID_PHONE_JP()`, `IS_VALID_POSTAL_CODE()` |
 | Create | `src/validators.ts`              | 正規表現ベースの検証ロジック（純粋関数）                                          |
 | Modify | `test/greeting.test.ts` → Delete | テンプレートのサンプルテスト削除                                                  |
 | Delete | `src/greeting.ts`                | テンプレートのサンプルモジュール削除                                              |
@@ -54,7 +54,7 @@ rm src/greeting.ts src/app.html test/greeting.test.ts
 `src/index.ts` を空のスタブに置換（旧コードが `greeting.ts` を import しており typecheck が失敗するため）:
 
 ```typescript
-// GAS entry points will be added in Task 4
+// Apps Script entry points will be added in Task 4
 ```
 
 - [ ] **Step 3: package.json の name を変更**
@@ -256,7 +256,7 @@ git commit -m "feat: implement data validation functions (GREEN)"
 
 ---
 
-### Task 4: index.ts — GAS エントリポイント
+### Task 4: index.ts — Apps Script エントリポイント
 
 **Files:**
 
@@ -284,7 +284,7 @@ function IS_VALID_POSTAL_CODE(value: string): boolean {
 }
 ```
 
-注意: `export` なし（GAS ランタイム制約）。ESLint の `no-unused-vars` は `src/index.ts` に対して無効化済み。
+注意: `export` なし（Apps Script ランタイム制約）。ESLint の `no-unused-vars` は `src/index.ts` に対して無効化済み。
 
 - [ ] **Step 2: 全チェック実行**
 
@@ -307,7 +307,7 @@ Expected: `dist/index.js` に 3 つの関数がバンドルされている
 
 ```bash
 git add src/index.ts
-git commit -m "feat: add GAS entry points for custom functions"
+git commit -m "feat: add Apps Script entry points for custom functions"
 ```
 
 ---
@@ -346,7 +346,7 @@ git push origin main
 
 | Action | Path                         | Responsibility                                     |
 | ------ | ---------------------------- | -------------------------------------------------- |
-| Modify | `src/index.ts`               | GAS エントリ: `checkNewRows()`, `setSlackConfig()` |
+| Modify | `src/index.ts`               | Apps Script エントリ: `checkNewRows()`, `setSlackConfig()` |
 | Create | `src/sheet-reader.ts`        | 行データ差分抽出ロジック（純粋関数）               |
 | Create | `src/slack-message.ts`       | Slack API payload 構築（純粋関数）                 |
 | Delete | `src/greeting.ts`            | テンプレートのサンプル削除                         |
@@ -384,7 +384,7 @@ rm src/greeting.ts src/app.html test/greeting.test.ts
 `src/index.ts` を空のスタブに置換:
 
 ```typescript
-// GAS entry points will be added in Task 11
+// Apps Script entry points will be added in Task 11
 ```
 
 - [ ] **Step 3: package.json の name を変更**
@@ -670,7 +670,7 @@ git commit -m "feat: implement Slack message builder (GREEN)"
 
 ---
 
-### Task 11: index.ts — GAS エントリポイント
+### Task 11: index.ts — Apps Script エントリポイント
 
 **Files:**
 
@@ -739,7 +739,7 @@ Expected: `dist/index.js` にバンドル成功
 
 ```bash
 git add src/index.ts
-git commit -m "feat: add GAS entry points for Slack notifier"
+git commit -m "feat: add Apps Script entry points for Slack notifier"
 ```
 
 ---
@@ -774,7 +774,7 @@ git push origin main
 
 | Action | Path                             | Responsibility                               |
 | ------ | -------------------------------- | -------------------------------------------- |
-| Modify | `src/index.ts`                   | GAS エントリ: `doGet()`, `doPost(e)`         |
+| Modify | `src/index.ts`                   | Apps Script エントリ: `doGet()`, `doPost(e)`         |
 | Create | `src/form-validator.ts`          | フォーム入力バリデーション（純粋関数）       |
 | Create | `src/mail-builder.ts`            | メール件名・本文構築（純粋関数）             |
 | Modify | `src/app.html` → `src/form.html` | お問い合わせフォーム（AJAX 送信 + 結果表示） |
@@ -813,7 +813,7 @@ mv src/app.html src/form.html
 `src/index.ts` を空のスタブに置換:
 
 ```typescript
-// GAS entry points will be added in Task 19
+// Apps Script entry points will be added in Task 19
 ```
 
 - [ ] **Step 3: package.json の name を変更**
@@ -1176,7 +1176,7 @@ git commit -m "feat: implement mail options builder (GREEN)"
 
 - [ ] **Step 1: src/form.html を書き換え**
 
-`google.script.run` を使った AJAX パターンで実装（GAS scriptlet タグ `<?= ?>` を HTML 属性内で使うと HTMLHint の `attr-unsafe-chars` ルールに抵触するため）:
+`google.script.run` を使った AJAX パターンで実装（Apps Script scriptlet タグ `<?= ?>` を HTML 属性内で使うと HTMLHint の `attr-unsafe-chars` ルールに抵触するため）:
 
 ```html
 <!doctype html>
@@ -1331,7 +1331,7 @@ git commit -m "feat: add contact form HTML template"
 
 ---
 
-### Task 19: index.ts — GAS エントリポイント
+### Task 19: index.ts — Apps Script エントリポイント
 
 **Files:**
 
@@ -1403,7 +1403,7 @@ Expected: `index.js`, `appsscript.json`, `form.html`
 
 ```bash
 git add src/index.ts
-git commit -m "feat: add GAS entry points for form mailer"
+git commit -m "feat: add Apps Script entry points for form mailer"
 ```
 
 ---

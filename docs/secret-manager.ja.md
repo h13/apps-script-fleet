@@ -18,7 +18,7 @@ GCP ネイティブ認証への置き換えは不可能です。変わるのは�
 1. **Secret Manager から `.clasprc.json` を取り出すための認証** — WIF(CI)/
    個人 gcloud(開発者)。IAM によるスコープ制御・監査ログ・ローテーションが
    効くのはこの層です。
-2. **clasp が GAS へデプロイするための認証** — 取り出した `.clasprc.json`
+2. **clasp が Apps Script へデプロイするための認証** — 取り出した `.clasprc.json`
    (従来どおり・据え置き)。
 
 すべて中央集約されており、**リポ単位のセットアップ作業はゼロ**です:
@@ -26,7 +26,7 @@ GCP ネイティブ認証への置き換えは不可能です。変わるのは�
 | リソース | 個数 | スコープ |
 | --- | --- | --- |
 | Secret `clasp-credentials` | 1 | 中央 GCP プロジェクト。CI は常に `latest` を読む |
-| WIF プール `gas-fleet` | 1 | 配下にプロバイダ `github` + `gitlab` |
+| WIF プール `apps-script-fleet` | 1 | 配下にプロバイダ `github` + `gitlab` |
 | IAM バインディング | org/group 単位 | `principalSet://…/attribute.repository_owner/<org>`(GitHub)/ `attribute.namespace_path/<group>`(GitLab) |
 | CI 変数 `GCP_WIF_PROVIDER`, `CLASPRC_SECRET` | org/group レベル | 全リポに自動継承 |
 
@@ -65,7 +65,7 @@ gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
 
 ### 1. secret の作成
 
-デプロイ専用 Google アカウント(例: `gas-deploy@yourcompany.com`)で:
+デプロイ専用 Google アカウント(例: `apps-script-deploy@yourcompany.com`)で:
 
 まずそのアカウントの **Apps Script API** を
 [script.google.com/home/usersettings](https://script.google.com/home/usersettings)
@@ -97,8 +97,8 @@ gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ### 2. WIF プールの作成
 
 ```bash
-gcloud iam workload-identity-pools create gas-fleet \
-  --location=global --display-name="GAS Fleet CI"
+gcloud iam workload-identity-pools create apps-script-fleet \
+  --location=global --display-name="Apps Script Fleet CI"
 ```
 
 ### 3a. GitHub プロバイダ
@@ -108,7 +108,7 @@ attribute condition は**必須**です: `token.actions.githubusercontent.com` �
 
 ```bash
 gcloud iam workload-identity-pools providers create-oidc github \
-  --location=global --workload-identity-pool=gas-fleet \
+  --location=global --workload-identity-pool=apps-script-fleet \
   --issuer-uri="https://token.actions.githubusercontent.com" \
   --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
   --attribute-condition="assertion.repository_owner == '${ORG}'"
@@ -118,7 +118,7 @@ gcloud iam workload-identity-pools providers create-oidc github \
 
 ```bash
 gcloud iam workload-identity-pools providers create-oidc gitlab \
-  --location=global --workload-identity-pool=gas-fleet \
+  --location=global --workload-identity-pool=apps-script-fleet \
   --issuer-uri="${GITLAB_URL}" \
   --allowed-audiences="${GITLAB_URL}" \
   --attribute-mapping="google.subject=assertion.sub,attribute.project_path=assertion.project_path,attribute.namespace_path=assertion.namespace_path" \
@@ -133,7 +133,7 @@ gcloud iam workload-identity-pools providers create-oidc gitlab \
 secret リソースではなく、**プロジェクトレベル**で付与します:
 
 ```bash
-POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet"
+POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/apps-script-fleet"
 
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role=roles/secretmanager.secretAccessor --condition=None \
@@ -163,7 +163,7 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 ```bash
 gcloud secrets add-iam-policy-binding clasp-credentials \
   --role=roles/secretmanager.secretAccessor \
-  --member="group:gas-developers@yourcompany.com"
+  --member="group:apps-script-developers@yourcompany.com"
 ```
 
 ### 6. Data Access 監査ログの有効化
@@ -198,7 +198,7 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
 
 | 変数 | 値 |
 | --- | --- |
-| `GCP_WIF_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/gas-fleet/providers/github`(GitHub)/ `…/providers/gitlab`(GitLab) |
+| `GCP_WIF_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/apps-script-fleet/providers/github`(GitHub)/ `…/providers/gitlab`(GitLab) |
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables(secret ではなく
@@ -207,7 +207,7 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
 
   ```bash
   gh variable set GCP_WIF_PROVIDER --org "$ORG" --visibility all \
-    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet/providers/github"
+    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/apps-script-fleet/providers/github"
   gh variable set CLASPRC_SECRET --org "$ORG" --visibility all \
     --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
   ```
@@ -285,7 +285,7 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 
 ## スコープの限界(既知の制約)
 
-取り出した `.clasprc.json` は依然としてフリート内の**すべての** GAS プロジェクト
+取り出した `.clasprc.json` は依然としてフリート内の**すべての** Apps Script プロジェクト
 を操作できるユーザー OAuth トークンです。この移行で改善されるのは配布・保管・
 失効・監査であり、トークン自体の爆発半径ではありません(Apps Script API の
 制約上、不可避です)。
@@ -302,7 +302,7 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 | Secret Manager 403 `PERMISSION_DENIED`(CI)— セットアップ直後 | `principalSet` の IAM バインディングは反映に数分かかる。2〜5分待ってリトライしてから疑うこと。 |
 | Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り(attribute 名 `repository_owner` / `namespace_path` と値を確認)、**または secret 単体への付与になっている — プロジェクトレベルに移す**(実環境で検証済み、§4 参照)。 |
 | `PERMISSION_DENIED`(開発者) | 開発者 Google グループに未所属、またはグループに `secretAccessor` が無い。 |
-| GAS スクリプトの所有者が意図しないアカウントになっている | マシンに残っていた古い `~/.clasprc.json` から secret を格納したのが原因。スクリプトの所有権はドメイン跨ぎで移管できず、clasp トークンではゴミ箱送りすらできない(`drive.file` スコープ + スクリプトは Apps Script API 経由作成のため「アプリのファイル」扱いにならない)。対処: 正しいアカウントで `clasp login` → secret をローテーション → 各リポで `init.sh` 再実行 → 孤児スクリプトは旧所有者が手動削除。 |
+| スクリプトの所有者が意図しないアカウントになっている | マシンに残っていた古い `~/.clasprc.json` から secret を格納したのが原因。スクリプトの所有権はドメイン跨ぎで移管できず、clasp トークンではゴミ箱送りすらできない(`drive.file` スコープ + スクリプトは Apps Script API 経由作成のため「アプリのファイル」扱いにならない)。対処: 正しいアカウントで `clasp login` → secret をローテーション → 各リポで `init.sh` 再実行 → 孤児スクリプトは旧所有者が手動削除。 |
 | GitLab ジョブが script 前に `id_tokens` エラーで失敗 | GitLab < 16.1(`aud` の変数展開)または < 15.7(`id_tokens` 自体)。アップグレードするか、旧テンプレ + legacy モードを継続。 |
 | GitLab で `main` は WIF が通るが `dev` で失敗 | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` が **protected** 変数になっている。unprotected に変更。 |
 | エアギャップ GitLab | WIF は `sts.googleapis.com` + `secretmanager.googleapis.com` への egress が必要。legacy `CLASPRC_JSON` を継続使用。 |

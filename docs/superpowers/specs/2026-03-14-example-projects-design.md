@@ -2,12 +2,12 @@
 
 ## Overview
 
-apps-script-fleet テンプレートから実際に「Use this template」で生成する 3 つの example リポジトリ。実用的な GAS プロジェクトとして動作しつつ、テンプレートのショーケースとしても機能する。
+apps-script-fleet テンプレートから実際に「Use this template」で生成する 3 つの example リポジトリ。実用的な Apps Script プロジェクトとして動作しつつ、テンプレートのショーケースとしても機能する。
 
 ## Goals
 
 - テンプレートの「1 repo = 1 function」思想を example 自体が体現する
-- GAS の 3 大パターン（カスタム関数 / トリガー駆動 / Web App）を網羅する
+- Apps Script の 3 大パターン（カスタム関数 / トリガー駆動 / Web App）を網羅する
 - ユーザーが自分のユースケースに近い example をクローンして始められる
 
 ## Common Design Principles
@@ -19,10 +19,10 @@ apps-script-fleet テンプレートから実際に「Use this template」で生
 
 ### Architecture Pattern
 
-- GAS 固有 API（HtmlService, SpreadsheetApp, GmailApp, UrlFetchApp, PropertiesService）は `src/index.ts` に閉じ込める
+- Apps Script 固有 API（HtmlService, SpreadsheetApp, GmailApp, UrlFetchApp, PropertiesService）は `src/index.ts` に閉じ込める
 - テスト可能なビジネスロジックは別モジュールに純粋関数として分離
 - `src/index.ts` はカバレッジ対象外（テンプレートの既存設定を踏襲）
-- エントリポイント関数には `export` をつけない（GAS ランタイム制約）
+- エントリポイント関数には `export` をつけない（Apps Script ランタイム制約）
 
 ### Naming Convention
 
@@ -54,7 +54,7 @@ Spreadsheet カスタム関数 — 日本ビジネス向けデータ検証。セ
 ### File Structure
 
 ```
-src/index.ts              — GAS エントリ: IS_VALID_EMAIL(), IS_VALID_PHONE_JP(), IS_VALID_POSTAL_CODE()
+src/index.ts              — Apps Script エントリ: IS_VALID_EMAIL(), IS_VALID_PHONE_JP(), IS_VALID_POSTAL_CODE()
                             各関数は validators.ts に委譲するだけ
 src/validators.ts         — 正規表現ベースの検証ロジック（純粋関数、export あり）
 test/validators.test.ts   — 正常系・異常系・エッジケース（空文字、null、ハイフンあり/なし等）
@@ -92,7 +92,7 @@ Spreadsheet に行が追加されたら Slack App Bot Token（`chat.postMessage`
 ### File Structure
 
 ```
-src/index.ts              — GAS エントリ: checkNewRows(), setSlackConfig()
+src/index.ts              — Apps Script エントリ: checkNewRows(), setSlackConfig()
                             SpreadsheetApp + PropertiesService + UrlFetchApp を使う統合層
 src/sheet-reader.ts       — extractNewRows(allRows, lastProcessedIndex): 差分抽出の純粋関数
 src/slack-message.ts      — buildSlackPayload(rows, channelId): Slack API リクエストボディ構築の純粋関数
@@ -135,7 +135,7 @@ appsscript.json           — oauthScopes: [script.external_request, spreadsheet
 ### File Structure
 
 ```
-src/index.ts              — GAS エントリ: doGet(), doPost(e)
+src/index.ts              — Apps Script エントリ: doGet(), doPost(e)
                             バリデーション → メール送信 → 結果HTML返却
 src/form-validator.ts     — validateFormInput({ name, email, body }): バリデーション結果を返す純粋関数
 src/mail-builder.ts       — buildMailOptions({ name, email, body }): 件名・HTML本文を組み立てる純粋関数
