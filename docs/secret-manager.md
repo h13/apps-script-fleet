@@ -118,21 +118,32 @@ sets to `$CI_SERVER_URL` (scheme included, no trailing slash).
 
 ### 4. Grant CI access (org/group-wide)
 
+Grant at the **project level**, not on the secret resource:
+
 ```bash
 POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.repository_owner/${ORG}"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.namespace_path/${GROUP}"
 ```
 
-> IAM changes on `principalSet://` members can take a few minutes to
+> **Field note — why project level:** granting `secretAccessor` to the
+> `principalSet://` on the secret alone (`gcloud secrets
+> add-iam-policy-binding`) was observed to keep returning `PERMISSION_DENIED`
+> for federated CI principals even 30+ minutes after binding, while the same
+> member granted at project level became effective within minutes. The central
+> project holds only fleet secrets, so the project-level grant does not widen
+> access in practice — but if you later add unrelated secrets to this project,
+> revisit this and re-test the secret-scoped grant.
+>
+> Also note: `principalSet://` IAM changes can take a few minutes to
 > propagate. A `PERMISSION_DENIED` on the very first CI run right after this
-> step usually just means "wait 2–5 minutes and retry", not a misconfiguration.
+> step usually just means "wait and retry".
 
 ### 5. Grant developer access
 
@@ -217,7 +228,8 @@ Impossible under the legacy model; now routine:
 
 ## Hardening: Per-Repo Grants (Optional)
 
-Instead of the org/group-wide `principalSet`, grant per repo:
+Instead of the org/group-wide `principalSet`, grant per repo (still at
+project level — see the field note in §4):
 
 ```bash
 # GitHub — one repo only
@@ -249,7 +261,7 @@ which the Apps Script API makes unavoidable.
 | `secrets create` fails with `FAILED_PRECONDITION` on `constraints/gcp.resourceLocations` | Org policy forbids global replication. Create with `--replication-policy=user-managed --locations=<allowed-region>` (check `gcloud org-policies describe gcp.resourceLocations --project=… --effective`). |
 | `cloud Resource Manager API has not been used in project …` during the CI secret fetch | Enable `cloudresourcemanager.googleapis.com` on the central project — `get-secretmanager-secrets` uses it to resolve the project. |
 | Secret Manager 403 `PERMISSION_DENIED` (CI) — right after setup | `principalSet` IAM bindings take a few minutes to propagate. Wait 2–5 minutes and retry before changing anything. |
-| Secret Manager 403 `PERMISSION_DENIED` (CI) — persistent | Missing/wrong `principalSet` binding. Verify the attribute name (`repository_owner` vs `namespace_path`) and value. |
+| Secret Manager 403 `PERMISSION_DENIED` (CI) — persistent | Either the `principalSet` binding is missing/wrong (check the attribute name — `repository_owner` vs `namespace_path` — and value), **or the grant is on the secret resource only — move it to project level** (field-verified, see §4). |
 | `PERMISSION_DENIED` (developer) | Not in the developer Google group, or the group lacks `secretAccessor`. |
 | GitLab job fails before script with `id_tokens` error | GitLab < 16.1 (variable expansion in `aud`) or < 15.7 (`id_tokens` itself). Upgrade or stay on legacy mode with an older template revision. |
 | WIF works on `main` but not `dev` (GitLab) | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` set as **protected** variables. Make them unprotected. |

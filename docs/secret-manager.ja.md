@@ -119,21 +119,33 @@ gcloud iam workload-identity-pools providers create-oidc gitlab \
 
 ### 4. CI へのアクセス付与(org/group 単位)
 
+secret リソースではなく、**プロジェクトレベル**で付与します:
+
 ```bash
 POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.repository_owner/${ORG}"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.namespace_path/${GROUP}"
 ```
 
-> `principalSet://` メンバーへの IAM 変更は反映まで数分かかることがあります。
-> この直後の初回 CI 実行での `PERMISSION_DENIED` は、多くの場合「2〜5分待って
-> リトライ」で解決します — 設定ミスと決めつけないでください。
+> **フィールドノート — なぜプロジェクトレベルか:** `principalSet://` への
+> `secretAccessor` を secret 単体に付与(`gcloud secrets
+> add-iam-policy-binding`)した場合、バインディングから30分以上経過しても
+> フェデレーテッド CI プリンシパルに対して `PERMISSION_DENIED` が返り続ける
+> 事象を実環境で確認しました。同じメンバーをプロジェクトレベルで付与すると
+> 数分で有効になります。中央プロジェクトはフリートの secret 専用なので、
+> プロジェクトレベル付与でも実質的なアクセス範囲は広がりません — ただし
+> 将来このプロジェクトに無関係な secret を追加する場合は、この判断を再検討
+> してください。
+>
+> また、`principalSet://` の IAM 変更は反映まで数分かかることがあります。
+> 直後の初回 CI 実行での `PERMISSION_DENIED` は「待ってリトライ」で解決する
+> ことが多いです。
 
 ### 5. 開発者へのアクセス付与
 
@@ -218,7 +230,8 @@ gcloud auth login          # 個人アカウント、マシンごとに1回
 
 ## ハードニング: リポ単位付与(オプション)
 
-org/group 一括の `principalSet` の代わりに、リポ単位で付与できます:
+org/group 一括の `principalSet` の代わりに、リポ単位で付与できます(§4 の
+フィールドノートのとおり、こちらもプロジェクトレベルで):
 
 ```bash
 # GitHub — 特定リポのみ
@@ -250,7 +263,7 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 | `secrets create` が `FAILED_PRECONDITION`(`constraints/gcp.resourceLocations`) | 組織ポリシーが global レプリケーションを禁止。`--replication-policy=user-managed --locations=<許可リージョン>` で作成(許可リージョンは `gcloud org-policies describe gcp.resourceLocations --project=… --effective` で確認)。 |
 | CI の secret 取得時に `cloud Resource Manager API has not been used in project …` | 中央プロジェクトで `cloudresourcemanager.googleapis.com` を有効化 — `get-secretmanager-secrets` がプロジェクト解決に使用。 |
 | Secret Manager 403 `PERMISSION_DENIED`(CI)— セットアップ直後 | `principalSet` の IAM バインディングは反映に数分かかる。2〜5分待ってリトライしてから疑うこと。 |
-| Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り。attribute 名(`repository_owner` / `namespace_path`)と値を確認。 |
+| Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り(attribute 名 `repository_owner` / `namespace_path` と値を確認)、**または secret 単体への付与になっている — プロジェクトレベルに移す**(実環境で検証済み、§4 参照)。 |
 | `PERMISSION_DENIED`(開発者) | 開発者 Google グループに未所属、またはグループに `secretAccessor` が無い。 |
 | GitLab ジョブが script 前に `id_tokens` エラーで失敗 | GitLab < 16.1(`aud` の変数展開)または < 15.7(`id_tokens` 自体)。アップグレードするか、旧テンプレ + legacy モードを継続。 |
 | GitLab で `main` は WIF が通るが `dev` で失敗 | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` が **protected** 変数になっている。unprotected に変更。 |
