@@ -1,0 +1,287 @@
+<!doctype html>
+<!--
+  Source for docs/architecture.png (960x560).
+  Regenerate: ./docs/diagrams/render.sh
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 960px;
+        height: 560px;
+        overflow: hidden;
+      }
+
+      body {
+        background: #0d1117;
+        font-family: 'DejaVu Sans Mono', monospace;
+        color: #e6edf3;
+        position: relative;
+      }
+
+      svg.wires {
+        position: absolute;
+        inset: 0;
+      }
+
+      .title {
+        position: absolute;
+        top: 22px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      .box {
+        position: absolute;
+        border-radius: 6px;
+        background: #10151d;
+      }
+
+      .template {
+        left: 374px;
+        top: 56px;
+        width: 212px;
+        height: 60px;
+        border: 1.5px solid #2f81f7;
+        border-left: 4px solid #2f81f7;
+        padding: 10px 12px;
+        white-space: nowrap;
+      }
+
+      .template .name {
+        color: #58a6ff;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .template .sub {
+        color: #8b949e;
+        font-size: 10px;
+        margin-top: 5px;
+        letter-spacing: 1px;
+      }
+
+      .hint {
+        position: absolute;
+        top: 124px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #6e7681;
+        font-size: 10px;
+      }
+
+      .repo {
+        width: 196px;
+        height: 100px;
+        top: 172px;
+        padding: 12px 14px;
+      }
+
+      .repo .name {
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .repo .desc {
+        color: #8b949e;
+        font-size: 11px;
+        line-height: 1.5;
+        margin-top: 8px;
+      }
+
+      .badges {
+        position: absolute;
+        left: 14px;
+        bottom: 12px;
+      }
+
+      .badge {
+        display: inline-block;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #fff;
+        margin-right: 4px;
+      }
+
+      .ci {
+        background: #238636;
+      }
+
+      .cd {
+        background: #8957e5;
+      }
+
+      .section {
+        position: absolute;
+        left: 68px;
+        right: 68px;
+        color: #6e7681;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+      }
+
+      .section::after {
+        content: '';
+        position: absolute;
+        left: 130px;
+        right: 0;
+        top: 6px;
+        border-top: 1px solid #21262d;
+      }
+
+      .infra {
+        top: 307px;
+        width: 400px;
+        height: 60px;
+        padding: 11px 14px;
+      }
+
+      .infra .name {
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .infra .row {
+        margin-top: 7px;
+        font-size: 11px;
+      }
+
+      .infra .key {
+        font-size: 11px;
+      }
+
+      .infra .note {
+        color: #8b949e;
+        font-size: 10px;
+        margin-left: 12px;
+      }
+
+      .target {
+        position: absolute;
+        top: 420px;
+        height: 27px;
+        border: 1px solid #30363d;
+        border-radius: 5px;
+        background: #10151d;
+        color: #c9d1d9;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="wires" width="960" height="560">
+      <!-- template -> repos rail -->
+      <path
+        d="M480 116 V152 M165 152 H795 M165 152 V172 M375 152 V172 M585 152 V172 M795 152 V172"
+        stroke="#30363d"
+        stroke-width="1.5"
+        fill="none"
+      />
+      <circle cx="165" cy="152" r="3.5" fill="#484f58" />
+      <circle cx="375" cy="152" r="3.5" fill="#484f58" />
+      <circle cx="585" cy="152" r="3.5" fill="#484f58" />
+      <circle cx="795" cy="152" r="3.5" fill="#484f58" />
+      <!-- repos -> shared infra -->
+      <path
+        d="M165 272 V307 M375 272 V307 M585 272 V307 M795 272 V307"
+        stroke="#21262d"
+        stroke-width="1.5"
+        stroke-dasharray="3 4"
+        fill="none"
+      />
+      <!-- repos -> deploy targets -->
+      <path
+        d="M165 367 V420 M375 367 V420 M585 367 V420 M795 367 V420"
+        stroke="#21262d"
+        stroke-width="1.5"
+        stroke-dasharray="3 4"
+        fill="none"
+      />
+    </svg>
+
+    <div class="title">1 Repo = 1 Function</div>
+
+    <div class="box template">
+      <div class="name">apps-script-fleet</div>
+      <div class="sub">TypeScript&#8194;Rollup&#8194;Jest&#8194;CI/CD</div>
+    </div>
+    <div class="hint">Use this template</div>
+
+    <div class="box repo" style="left: 67px; border: 1.5px solid #3fb950">
+      <div class="name">slack-notify</div>
+      <div class="desc">Slack notification<br />on form submit</div>
+      <div class="badges">
+        <span class="badge ci">CI</span><span class="badge cd">CD</span>
+      </div>
+    </div>
+    <div class="box repo" style="left: 277px; border: 1.5px solid #2f81f7">
+      <div class="name">sheet-report</div>
+      <div class="desc">Weekly report<br />generation</div>
+      <div class="badges">
+        <span class="badge ci">CI</span><span class="badge cd">CD</span>
+      </div>
+    </div>
+    <div class="box repo" style="left: 487px; border: 1.5px solid #a371f7">
+      <div class="name">form-handler</div>
+      <div class="desc">Form response<br />processing</div>
+      <div class="badges">
+        <span class="badge ci">CI</span><span class="badge cd">CD</span>
+      </div>
+    </div>
+    <div class="box repo" style="left: 697px; border: 1.5px solid #d29922">
+      <div class="name">drive-cleanup</div>
+      <div class="desc">Drive file<br />auto-archiving</div>
+      <div class="badges">
+        <span class="badge ci">CI</span><span class="badge cd">CD</span>
+      </div>
+    </div>
+
+    <div class="section" style="top: 289px">Shared Infrastructure</div>
+
+    <div
+      class="box infra"
+      style="left: 68px; border: 1.5px solid #238636; background: #0f1d14"
+    >
+      <div class="name" style="color: #3fb950">Organization Secrets</div>
+      <div class="row">
+        <span class="key" style="color: #7ee787">CLASPRC_JSON</span>
+        <span class="note">shared across all repos</span>
+      </div>
+    </div>
+    <div
+      class="box infra"
+      style="left: 490px; border: 1.5px solid #8957e5; background: #16121f"
+    >
+      <div class="name" style="color: #bc8cff">Automated Maintenance</div>
+      <div class="row">
+        <span class="key" style="color: #d2a8ff">Renovate</span>
+        <span class="note">+ Template Sync</span>
+      </div>
+    </div>
+
+    <div class="section" style="top: 383px">Deploy Targets</div>
+
+    <div class="target" style="left: 76px">Apps Script Project A</div>
+    <div class="target" style="left: 286px">Apps Script Project B</div>
+    <div class="target" style="left: 496px">Apps Script Project C</div>
+    <div class="target" style="left: 706px">Apps Script Project D</div>
+  </body>
+</html>
