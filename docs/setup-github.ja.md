@@ -10,9 +10,21 @@
 
 ## 初回：Organization の設定
 
-CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` の内容を **Organization Secret**（名前: `CLASPRC_JSON`）として追加します。
+clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は Workload Identity Federation でキーレス取得します — 詳細: [secret-manager.ja.md](secret-manager.ja.md)。概要:
 
-> このテンプレートから作成されるすべてのリポジトリがこの Secret を共有します。リポごとの認証設定は不要です。
+1. CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
+2. WIF プール `gas-fleet` に `github` プロバイダを作成し、org に attribute 制限（`assertion.repository_owner == '<org>'` — GitHub の issuer はマルチテナントのため必須）。
+3. `principalSet://…/attribute.repository_owner/<org>` に `roles/secretmanager.secretAccessor` を付与。
+4. **Organization variables** `GCP_WIF_PROVIDER` と `CLASPRC_SECRET` を設定。
+
+> このテンプレートから作成されるすべてのリポジトリが自動的に WIF で認証します。リポごとの認証設定は不要です。リポ単位のハードニングが必要な場合は、IAM を `attribute.repository/<org>/<repo>` にバインドするか、deployment environment にピン留め（`sub = repo:ORG/REPO:environment:ENV`）できます。注意: CD は `workflow_run` トリガーで動くため、`ref` ベースの OIDC 条件は不安定です — `repository` / `environment` クレームを使ってください。
+
+<details>
+<summary>Legacy フォールバック: <code>CLASPRC_JSON</code> Organization Secret</summary>
+
+`GCP_WIF_PROVIDER` 未設定時に自動的に使われます: `~/.clasprc.json` の内容を **Organization Secret**（名前: `CLASPRC_JSON`）として追加します。
+
+</details>
 
 ## プロジェクトごと：新しい GAS リポジトリの作成
 
