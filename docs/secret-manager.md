@@ -56,8 +56,10 @@ GITLAB_URL=https://gitlab.example.com  # or https://gitlab.com
 gcloud config set project "$PROJECT_ID"
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 
-# 0. Enable APIs
-gcloud services enable secretmanager.googleapis.com sts.googleapis.com iam.googleapis.com
+# 0. Enable APIs (cloudresourcemanager is used by the GitHub Action to
+#    resolve the project — without it the secret fetch fails at run time)
+gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
+  iam.googleapis.com cloudresourcemanager.googleapis.com
 ```
 
 ### 1. Create the secret
@@ -69,6 +71,16 @@ npx @google/clasp login            # writes ~/.clasprc.json
 gcloud secrets create clasp-credentials --replication-policy=automatic
 gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ```
+
+> If your organization enforces `constraints/gcp.resourceLocations`, the
+> `automatic` (global) replication is rejected with `FAILED_PRECONDITION`.
+> Pin the replica to an allowed region instead — resource name, access path,
+> and IAM are unchanged:
+>
+> ```bash
+> gcloud secrets create clasp-credentials \
+>   --replication-policy=user-managed --locations=asia-northeast1
+> ```
 
 ### 2. Create the WIF pool
 
@@ -118,6 +130,10 @@ gcloud secrets add-iam-policy-binding clasp-credentials \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.namespace_path/${GROUP}"
 ```
 
+> IAM changes on `principalSet://` members can take a few minutes to
+> propagate. A `PERMISSION_DENIED` on the very first CI run right after this
+> step usually just means "wait 2–5 minutes and retry", not a misconfiguration.
+
 ### 5. Grant developer access
 
 ```bash
@@ -153,7 +169,8 @@ org-wide grant.
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables (not secrets —
-  these values are not sensitive).
+  these values are not sensitive). On a personal account (no org), set them
+  as repository variables instead.
 - **GitLab**: Group → Settings → CI/CD → Variables. Set them **unprotected**:
   protected variables are invisible on `dev` pipelines, which would silently
   drop dev deploys into legacy mode.
@@ -229,7 +246,10 @@ which the Apps Script API makes unavoidable.
 | STS 403 `unable to acquire impersonated credentials` / `The given credential is rejected by the attribute condition` | Provider `--attribute-condition` does not match (wrong org/group), or the JWT `aud` differs from `--allowed-audiences`. JWT `aud` = `$CI_SERVER_URL` with scheme, no trailing slash. |
 | STS 400 `Invalid value for "audience"` | STS request `audience` must be `//iam.googleapis.com/projects/<NUM>/…/providers/<name>` — **no `https:` prefix**, and it uses the project **number**. |
 | STS 400 `mapped attribute google.subject exceeds the 127 bytes limit` | The JWT `sub` is too long (deeply nested GitLab groups; long GitHub repo/environment names). Remap `google.subject` to a shorter claim, e.g. `assertion.project_path` (GitLab) — IAM here binds on attributes, not subject, so nothing else changes. |
-| Secret Manager 403 `PERMISSION_DENIED` (CI) | Missing/wrong `principalSet` binding. Verify the attribute name (`repository_owner` vs `namespace_path`) and value. |
+| `secrets create` fails with `FAILED_PRECONDITION` on `constraints/gcp.resourceLocations` | Org policy forbids global replication. Create with `--replication-policy=user-managed --locations=<allowed-region>` (check `gcloud org-policies describe gcp.resourceLocations --project=… --effective`). |
+| `cloud Resource Manager API has not been used in project …` during the CI secret fetch | Enable `cloudresourcemanager.googleapis.com` on the central project — `get-secretmanager-secrets` uses it to resolve the project. |
+| Secret Manager 403 `PERMISSION_DENIED` (CI) — right after setup | `principalSet` IAM bindings take a few minutes to propagate. Wait 2–5 minutes and retry before changing anything. |
+| Secret Manager 403 `PERMISSION_DENIED` (CI) — persistent | Missing/wrong `principalSet` binding. Verify the attribute name (`repository_owner` vs `namespace_path`) and value. |
 | `PERMISSION_DENIED` (developer) | Not in the developer Google group, or the group lacks `secretAccessor`. |
 | GitLab job fails before script with `id_tokens` error | GitLab < 16.1 (variable expansion in `aud`) or < 15.7 (`id_tokens` itself). Upgrade or stay on legacy mode with an older template revision. |
 | WIF works on `main` but not `dev` (GitLab) | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` set as **protected** variables. Make them unprotected. |

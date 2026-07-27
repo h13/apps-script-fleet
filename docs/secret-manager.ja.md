@@ -57,8 +57,10 @@ GITLAB_URL=https://gitlab.example.com  # または https://gitlab.com
 gcloud config set project "$PROJECT_ID"
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 
-# 0. API の有効化
-gcloud services enable secretmanager.googleapis.com sts.googleapis.com iam.googleapis.com
+# 0. API の有効化(cloudresourcemanager は GitHub Action がプロジェクト解決に
+#    使用 — 無いと secret 取得が実行時に失敗する)
+gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
+  iam.googleapis.com cloudresourcemanager.googleapis.com
 ```
 
 ### 1. secret の作成
@@ -70,6 +72,16 @@ npx @google/clasp login            # ~/.clasprc.json を生成
 gcloud secrets create clasp-credentials --replication-policy=automatic
 gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ```
+
+> 組織ポリシー `constraints/gcp.resourceLocations` が有効な組織では、
+> `automatic`(global)レプリケーションは `FAILED_PRECONDITION` で拒否され
+> ます。許可リージョンにレプリカを固定してください — リソース名・アクセス
+> パス・IAM は変わりません:
+>
+> ```bash
+> gcloud secrets create clasp-credentials \
+>   --replication-policy=user-managed --locations=asia-northeast1
+> ```
 
 ### 2. WIF プールの作成
 
@@ -119,6 +131,10 @@ gcloud secrets add-iam-policy-binding clasp-credentials \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.namespace_path/${GROUP}"
 ```
 
+> `principalSet://` メンバーへの IAM 変更は反映まで数分かかることがあります。
+> この直後の初回 CI 実行での `PERMISSION_DENIED` は、多くの場合「2〜5分待って
+> リトライ」で解決します — 設定ミスと決めつけないでください。
+
 ### 5. 開発者へのアクセス付与
 
 ```bash
@@ -154,7 +170,8 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables(secret ではなく
-  variable — 秘密情報ではないため)。
+  variable — 秘密情報ではないため)。個人アカウント(org なし)の場合は
+  リポジトリ変数として設定します。
 - **GitLab**: Group → Settings → CI/CD → Variables。**unprotected** で設定して
   ください: protected にすると `dev` パイプラインから見えず、dev デプロイが
   気づかないうちに legacy モードに落ちます。
@@ -230,7 +247,10 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 | STS 403 `unable to acquire impersonated credentials` / `The given credential is rejected by the attribute condition` | プロバイダの `--attribute-condition` 不一致(org/group 違い)、または JWT の `aud` が `--allowed-audiences` と不一致。JWT の `aud` = `$CI_SERVER_URL`(スキーム込み・末尾スラッシュ無し)。 |
 | STS 400 `Invalid value for "audience"` | STS リクエストの `audience` は `//iam.googleapis.com/projects/<NUM>/…/providers/<name>` — **`https:` プレフィックス無し**、プロジェクト**番号**を使う。 |
 | STS 400 `mapped attribute google.subject exceeds the 127 bytes limit` | JWT の `sub` が長すぎる(深くネストした GitLab group、長い GitHub repo/environment 名)。`google.subject` を短いクレームに再マップする(例: GitLab は `assertion.project_path`)— IAM は attribute にバインドしているため他は変更不要。 |
-| Secret Manager 403 `PERMISSION_DENIED`(CI) | `principalSet` バインディングの欠落・誤り。attribute 名(`repository_owner` / `namespace_path`)と値を確認。 |
+| `secrets create` が `FAILED_PRECONDITION`(`constraints/gcp.resourceLocations`) | 組織ポリシーが global レプリケーションを禁止。`--replication-policy=user-managed --locations=<許可リージョン>` で作成(許可リージョンは `gcloud org-policies describe gcp.resourceLocations --project=… --effective` で確認)。 |
+| CI の secret 取得時に `cloud Resource Manager API has not been used in project …` | 中央プロジェクトで `cloudresourcemanager.googleapis.com` を有効化 — `get-secretmanager-secrets` がプロジェクト解決に使用。 |
+| Secret Manager 403 `PERMISSION_DENIED`(CI)— セットアップ直後 | `principalSet` の IAM バインディングは反映に数分かかる。2〜5分待ってリトライしてから疑うこと。 |
+| Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り。attribute 名(`repository_owner` / `namespace_path`)と値を確認。 |
 | `PERMISSION_DENIED`(開発者) | 開発者 Google グループに未所属、またはグループに `secretAccessor` が無い。 |
 | GitLab ジョブが script 前に `id_tokens` エラーで失敗 | GitLab < 16.1(`aud` の変数展開)または < 15.7(`id_tokens` 自体)。アップグレードするか、旧テンプレ + legacy モードを継続。 |
 | GitLab で `main` は WIF が通るが `dev` で失敗 | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` が **protected** 変数になっている。unprotected に変更。 |
