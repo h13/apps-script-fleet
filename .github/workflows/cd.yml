@@ -13,6 +13,9 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       !github.event.repository.is_template
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
     concurrency:
       group: deploy-${{ github.event.workflow_run.head_branch }}
@@ -42,10 +45,50 @@ jobs:
         env:
           DEPLOY_ENV: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
 
+      # Secret Manager mode: direct WIF (no service-account impersonation).
+      # Requires org variables GCP_WIF_PROVIDER + CLASPRC_SECRET (docs/secret-manager.md).
+      - name: Authenticate to Google Cloud (WIF)
+        if: vars.GCP_WIF_PROVIDER != ''
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+
+      - name: Fetch clasp credentials from Secret Manager
+        if: vars.GCP_WIF_PROVIDER != ''
+        id: gcp-secrets
+        uses: google-github-actions/get-secretmanager-secrets@bc9c54b29fdffb8a47776820a7d26e77b379d262 # v3.0.0
+        with:
+          secrets: |-
+            clasprc:${{ vars.CLASPRC_SECRET }}
+
       - name: Setup clasp credentials
+        env:
+          WIF_ENABLED: ${{ vars.GCP_WIF_PROVIDER != '' }}
+          CLASPRC_GCP: ${{ steps.gcp-secrets.outputs.clasprc }}
+          CLASPRC_LEGACY: ${{ secrets.CLASPRC_JSON }}
+          CLASP_JSON: ${{ secrets.CLASP_JSON }}
         run: |
-          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
-          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
+          if [ "$WIF_ENABLED" = "true" ]; then
+            # Secret Manager mode: never fall back to the legacy secret silently.
+            CLASPRC="$CLASPRC_GCP"
+            if [ -z "$CLASPRC" ]; then
+              echo "::error::GCP_WIF_PROVIDER is set but Secret Manager returned an empty payload. Check CLASPRC_SECRET and the secret's latest version."
+              exit 1
+            fi
+          else
+            CLASPRC="$CLASPRC_LEGACY"
+            if [ -z "$CLASPRC" ]; then
+              echo "::error::No clasp credentials. Set org variables GCP_WIF_PROVIDER + CLASPRC_SECRET (Secret Manager), or org secret CLASPRC_JSON (legacy)."
+              exit 1
+            fi
+          fi
+          if [ -z "$CLASP_JSON" ]; then
+            echo "::error::CLASP_JSON secret is not set for this environment."
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$CLASPRC" > ~/.clasprc.json
+          printf '%s' "$CLASP_JSON" > .clasp.json
 
       - name: Push to GAS
         run: pnpm exec clasp push -f

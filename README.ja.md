@@ -69,30 +69,38 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 | フロントエンド開発 | Vite + Alpine.js + Tailwind                                                  | 基本的な HTML（GAS 組み込み）                    |
 | テスト             | Vitest（任意）                                                               | Jest（80% カバレッジ必須）                       |
 | テンプレート同期   | —                                                                            | 週次（自動 PR）                                  |
-| 組織レベルの認証   | —                                                                            | CLASPRC_JSON 共有シークレット（GitHub + GitLab） |
+| 組織レベルの認証   | —                                                                            | Secret Manager + WIF、キーレス CI（GitHub + GitLab） |
 
 > リッチな UI をクライアントサイドフレームワークで構築する場合は、[Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) が適しています。
 > 組織全体で 5 つ以上の小さな GAS 自動化を管理する場合は、Apps Script Fleet の出番です。
 
 ## 組織セットアップ（初回のみ）
 
-チームが Apps Script Fleet を使い始める前に、組織の管理者が clasp の共有認証情報をセットアップします：
+チームが Apps Script Fleet を使い始める前に、組織の管理者が clasp の共有認証情報を **Google Cloud Secret Manager** に格納します。CI は **Workload Identity Federation (OIDC)** でキーレス取得、開発者は個人の `gcloud` ログインで取得します。secret 1つ + WIF プール1つ + org/group 単位 IAM = **リポごとの認証設定ゼロ**。旧方式には無かったローテーション・失効・監査ログが手に入ります。
 
-1. **clasp にログイン**（CI/CD デプロイに使う Google アカウントで）：
+詳細な手順: **[docs/secret-manager.ja.md](docs/secret-manager.ja.md)**。概要:
 
-   ```bash
-   npx @google/clasp login
-   ```
+1. **認証情報の格納**: デプロイ用アカウントで `clasp login` → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
+2. **WIF プール `gas-fleet` を作成**し、`github` / `gitlab` プロバイダを org/group に attribute 制限
+3. **`roles/secretmanager.secretAccessor` を付与**: CI の `principalSet://` と開発者 Google グループへ
+4. **org/group の CI 変数** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` を設定（両プラットフォーム同名）
+5. **各開発者**はマシンごとに1回 `./scripts/fetch-clasp-credentials.sh` を実行 — `~/.clasprc.json` は全リポで共有されます
 
-   `~/.clasprc.json` が生成されます。
+> **clasp の認証そのものは変わりません。** clasp は今後も `~/.clasprc.json` の OAuth トークンを使います（Apps Script API は push/deploy にサービスアカウント非対応）。変わるのはトークンの保管場所と配送経路だけです。
 
-2. **組織のパスワードマネージャーに保存** — `~/.clasprc.json` の内容を共有クレデンシャルとして登録します（例: 「clasp CI/CD — GAS Fleet」）。
+<details>
+<summary><strong>Legacy / エアギャップ向けフォールバック: <code>CLASPRC_JSON</code> 共有シークレット</strong></summary>
 
-3. **`CLASPRC_JSON` を組織レベルの CI/CD シークレットに設定**：
+エアギャップ GitLab（`sts.googleapis.com` / `secretmanager.googleapis.com` への egress が無い環境）向け。`GCP_WIF_PROVIDER` 未設定時、CI は自動的にこちらを使います:
+
+1. **clasp にログイン**（CI/CD 用 Google アカウントで）: `npx @google/clasp login` → `~/.clasprc.json` が生成されます
+2. **組織のパスワードマネージャーに保存** — `~/.clasprc.json` の内容を共有クレデンシャルとして登録（例: 「clasp CI/CD — GAS Fleet」）
+3. **`CLASPRC_JSON` を組織レベルの CI/CD シークレットに設定**:
    - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → `CLASPRC_JSON` を追加（値は JSON 全体）
    - **GitLab**: グループ → Settings → CI/CD → Variables → `CLASPRC_JSON` を追加（protected, masked）
+4. **各開発者**はパスワードマネージャーから `~/.clasprc.json` をローカルマシンにコピー
 
-4. **各開発者**はパスワードマネージャーから `~/.clasprc.json` をローカルマシンにコピーします。
+</details>
 
 ### GCP プロジェクトの設定（任意、推奨）
 

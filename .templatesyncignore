@@ -41,10 +41,14 @@
 :!docs/setup-github.ja.md
 :!docs/setup-gitlab.md
 :!docs/setup-gitlab.ja.md
+:!docs/secret-manager.md
+:!docs/secret-manager.ja.md
 
 # Scripts
 :!scripts/init.sh
 :!scripts/set-properties.sh
+:!scripts/gcp-get-secret.sh
+:!scripts/fetch-clasp-credentials.sh
 
 # Hook examples
 :!.github/hooks/post-deploy.sh.example

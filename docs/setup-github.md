@@ -10,9 +10,21 @@
 
 ## One-Time: Organization Setup
 
-Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and add `~/.clasprc.json` as an **Organization Secret** named `CLASPRC_JSON`.
+Store the shared clasp credentials in Google Cloud Secret Manager and let CI fetch them keylessly via Workload Identity Federation — full guide: [secret-manager.md](secret-manager.md). In short:
 
-> Every repository created from this template will use this secret — no per-repo auth setup needed.
+1. Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
+2. Create the WIF pool `gas-fleet` with a `github` provider, attribute-restricted to your org (`assertion.repository_owner == '<org>'` — required, the GitHub issuer is multi-tenant).
+3. Grant `roles/secretmanager.secretAccessor` to `principalSet://…/attribute.repository_owner/<org>`.
+4. Set **Organization variables** `GCP_WIF_PROVIDER` and `CLASPRC_SECRET`.
+
+> Every repository created from this template authenticates via WIF automatically — no per-repo auth setup needed. For per-repo hardening you can bind IAM to `attribute.repository/<org>/<repo>` instead, or pin tokens to a deployment environment (`sub = repo:ORG/REPO:environment:ENV`). Note: CD runs on a `workflow_run` trigger, where `ref`-based OIDC conditions are unreliable — prefer `repository` / `environment` claims.
+
+<details>
+<summary>Legacy fallback: <code>CLASPRC_JSON</code> Organization Secret</summary>
+
+Used automatically when `GCP_WIF_PROVIDER` is not set: add the contents of `~/.clasprc.json` as an **Organization Secret** named `CLASPRC_JSON`.
+
+</details>
 
 ## Per Project: Create a New Apps Script Repository
 

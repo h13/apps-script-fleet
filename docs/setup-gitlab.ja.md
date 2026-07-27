@@ -10,11 +10,28 @@
 
 ## 初回: Group の設定
 
-### 1. CLASPRC_JSON の追加
+### 1. clasp 認証情報のセットアップ（Secret Manager + WIF）
 
-CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` の内容を **Group CI/CD Variable**（名前: `CLASPRC_JSON`、masked, protected）として追加します。
+clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は Workload Identity Federation でキーレス取得します — 詳細: [secret-manager.ja.md](secret-manager.ja.md)。概要:
 
-> Group 内でこのテンプレートから作成されるすべてのプロジェクトがこの変数を共有します。プロジェクトごとの認証設定は不要です。
+1. CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
+2. WIF プール `gas-fleet` に `gitlab` プロバイダを作成: `--issuer-uri` と `--allowed-audiences` の両方に GitLab のベース URL を設定（CI の JWT の `aud` は `$CI_SERVER_URL`）し、group に attribute 制限。
+3. `principalSet://…/attribute.namespace_path/<group>` に `roles/secretmanager.secretAccessor` を付与。
+4. **Group CI/CD Variables** `GCP_WIF_PROVIDER` と `CLASPRC_SECRET` を設定 — **unprotected** で（protected にすると `dev` パイプラインから見えず、dev デプロイが気づかないうちに legacy モードに落ちます）。
+
+要件:
+
+- **GitLab >= 16.1**（`id_tokens: aud` の変数展開）。
+- Runner から `sts.googleapis.com` と `secretmanager.googleapis.com` への egress — **エアギャップ環境は下記の legacy フォールバックを継続してください**。
+
+> Group 内でこのテンプレートから作成されるすべてのプロジェクトが自動的に WIF で認証します。プロジェクトごとの認証設定は不要です。
+
+<details>
+<summary>Legacy / エアギャップ向けフォールバック: <code>CLASPRC_JSON</code> Group Variable</summary>
+
+`GCP_WIF_PROVIDER` 未設定時に自動的に使われます: `~/.clasprc.json` の内容を **Group CI/CD Variable**（名前: `CLASPRC_JSON`、masked, protected）として追加します。
+
+</details>
 
 ### 2. Template Project の作成
 
@@ -130,7 +147,7 @@ pnpm run check    # lint + 型チェック + テスト
 | ジョブ          | 必要な外部通信先                                     |
 | --------------- | ---------------------------------------------------- |
 | `check`         | npm レジストリのみ（`pnpm install` 用）              |
-| `deploy_*`      | `script.google.com`（HTTPS）                         |
+| `deploy_*`      | `script.google.com`。WIF モードでは `sts.googleapis.com` + `secretmanager.googleapis.com` も必要 |
 | `template_sync` | Template Project（社内 GitLab、Group Variable 経由） |
 
 **Template Project:**

@@ -69,30 +69,38 @@ The result — your day looks like this:
 | Frontend dev   | Vite + Alpine.js + Tailwind                                                  | Basic HTML (Apps Script built-in)            |
 | Testing        | Vitest (optional)                                                            | Jest (80% coverage enforced)                 |
 | Template sync  | —                                                                            | Weekly (auto-PR)                             |
-| Org-level auth | —                                                                            | CLASPRC_JSON shared secret (GitHub + GitLab) |
+| Org-level auth | —                                                                            | Secret Manager + WIF, keyless CI (GitHub + GitLab) |
 
 > Building a rich UI with client-side frameworks? [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) is the better fit.
 > Managing 5+ small Apps Script automations across your org? That's what Apps Script Fleet is for.
 
 ## Organization Setup (One-Time)
 
-Before your team can use Apps Script Fleet, an org admin needs to set up shared clasp credentials:
+Before your team can use Apps Script Fleet, an org admin stores the shared clasp credentials in **Google Cloud Secret Manager**. CI fetches them keylessly via **Workload Identity Federation (OIDC)**; developers fetch them with their personal `gcloud` login. One secret + one WIF pool + org/group-wide IAM = **zero per-repo auth setup**, with rotation, revocation, and audit logs the legacy model never had.
 
-1. **Login to clasp** with the Google account that will own CI/CD deployments:
+Full step-by-step guide: **[docs/secret-manager.md](docs/secret-manager.md)**. In outline:
 
-   ```bash
-   npx @google/clasp login
-   ```
+1. **Store credentials**: `clasp login` with the deploy account → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
+2. **Create WIF pool `gas-fleet`** with `github` / `gitlab` providers, attribute-restricted to your org/group
+3. **Grant `roles/secretmanager.secretAccessor`** to the CI `principalSet://` and to the developer Google group
+4. **Set org/group CI variables** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` (same names on both platforms)
+5. **Each developer** runs `./scripts/fetch-clasp-credentials.sh` once per machine — `~/.clasprc.json` is shared by every repo
 
-   This generates `~/.clasprc.json`.
+> **clasp auth itself is unchanged.** clasp still uses the `~/.clasprc.json` OAuth token (the Apps Script API does not support service accounts for push/deploy). Only the storage and delivery of that token change.
 
-2. **Save to your org's password manager** — share the contents of `~/.clasprc.json` as a shared credential entry (e.g., "clasp CI/CD — GAS Fleet").
+<details>
+<summary><strong>Legacy / air-gapped fallback: <code>CLASPRC_JSON</code> shared secret</strong></summary>
 
+For air-gapped GitLab instances (no egress to `sts.googleapis.com` / `secretmanager.googleapis.com`). CI uses this automatically when `GCP_WIF_PROVIDER` is not set:
+
+1. **Login to clasp** with the CI/CD Google account: `npx @google/clasp login` → generates `~/.clasprc.json`
+2. **Save to your org's password manager** — share the contents as a shared credential entry (e.g., "clasp CI/CD — GAS Fleet")
 3. **Set `CLASPRC_JSON` as an org-level CI/CD secret**:
    - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → add `CLASPRC_JSON` with the full JSON content
    - **GitLab**: Group → Settings → CI/CD → Variables → add `CLASPRC_JSON` (protected, masked)
+4. **Each developer** copies `~/.clasprc.json` from the password manager to their local machine
 
-4. **Each developer** copies `~/.clasprc.json` from the password manager to their local machine.
+</details>
 
 ### GCP Project Setup (Optional, Recommended)
 

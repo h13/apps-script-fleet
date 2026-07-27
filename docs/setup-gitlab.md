@@ -10,11 +10,28 @@
 
 ## One-Time: Group Setup
 
-### 1. Add CLASPRC_JSON
+### 1. Set up clasp credentials (Secret Manager + WIF)
 
-Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and add the contents of `~/.clasprc.json` as a **Group CI/CD Variable** named `CLASPRC_JSON` (masked, protected).
+Store the shared clasp credentials in Google Cloud Secret Manager and let CI fetch them keylessly via Workload Identity Federation — full guide: [secret-manager.md](secret-manager.md). In short:
 
-> Every project created from this template within the group will use this variable — no per-project auth setup needed.
+1. Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
+2. Create the WIF pool `gas-fleet` with a `gitlab` provider: `--issuer-uri` and `--allowed-audiences` both set to your GitLab base URL (the CI JWT's `aud` is `$CI_SERVER_URL`), attribute-restricted to your group.
+3. Grant `roles/secretmanager.secretAccessor` to `principalSet://…/attribute.namespace_path/<group>`.
+4. Set **Group CI/CD Variables** `GCP_WIF_PROVIDER` and `CLASPRC_SECRET` — **unprotected** (protected variables are invisible on `dev` pipelines, silently dropping dev deploys into legacy mode).
+
+Requirements:
+
+- **GitLab >= 16.1** (variable expansion in `id_tokens: aud`).
+- Runner egress to `sts.googleapis.com` and `secretmanager.googleapis.com` — **air-gapped instances must stay on the legacy fallback below**.
+
+> Every project created from this template within the group authenticates via WIF automatically — no per-project auth setup needed.
+
+<details>
+<summary>Legacy / air-gapped fallback: <code>CLASPRC_JSON</code> Group Variable</summary>
+
+Used automatically when `GCP_WIF_PROVIDER` is not set: add the contents of `~/.clasprc.json` as a **Group CI/CD Variable** named `CLASPRC_JSON` (masked, protected).
+
+</details>
 
 ### 2. Create the Template Project
 
@@ -130,7 +147,7 @@ Push to `dev` triggers dev deployment, push to `main` triggers production deploy
 | Job             | Outbound network access required                       |
 | --------------- | ------------------------------------------------------ |
 | `check`         | npm registry only (for `pnpm install`)                 |
-| `deploy_*`      | `script.google.com` (HTTPS)                            |
+| `deploy_*`      | `script.google.com`; WIF mode adds `sts.googleapis.com` + `secretmanager.googleapis.com` |
 | `template_sync` | Template Project (internal GitLab, via Group Variable) |
 
 **Template Project:**

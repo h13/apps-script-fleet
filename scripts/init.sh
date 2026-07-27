@@ -4,7 +4,8 @@ set -euo pipefail
 # Apps Script Fleet — Project Init
 #
 # Prerequisites:
-#   - ~/.clasprc.json exists (shared via org password manager)
+#   - ~/.clasprc.json exists — run ./scripts/fetch-clasp-credentials.sh
+#     (Secret Manager), or copy from the org password manager (legacy)
 #   - GitHub: gh CLI authenticated | GitLab: glab CLI authenticated
 #   - Node.js + pnpm installed
 #
@@ -291,7 +292,7 @@ echo "=== Apps Script Fleet — Project Init ==="
 echo ""
 
 # Checks
-[[ -f "$HOME/.clasprc.json" ]] || die "$HOME/.clasprc.json not found. Copy it from your organization's password manager."
+[[ -f "$HOME/.clasprc.json" ]] || die "$HOME/.clasprc.json not found. Run ./scripts/fetch-clasp-credentials.sh (Secret Manager), or copy it from your organization's password manager (legacy)."
 require_cmd pnpm
 require_cmd node
 validate_type "$GAS_TYPE"
