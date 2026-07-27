@@ -66,6 +66,12 @@ gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
 
 With the dedicated deploy Google account (e.g. `gas-deploy@yourcompany.com`):
 
+First enable the **Apps Script API** for that account at
+[script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+— it is a per-account setting, and `clasp create`/`push` fails with
+`User has not enabled the Apps Script API` without it (propagation can take
+a few minutes).
+
 ```bash
 npx @google/clasp login            # writes ~/.clasprc.json
 

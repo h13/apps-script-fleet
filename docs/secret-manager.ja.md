@@ -67,6 +67,12 @@ gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
 
 デプロイ専用 Google アカウント(例: `gas-deploy@yourcompany.com`)で:
 
+まずそのアカウントの **Apps Script API** を
+[script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+で有効化します — アカウント単位の設定で、無効のままだと `clasp create`/`push`
+が `User has not enabled the Apps Script API` で失敗します(反映まで数分
+かかる場合あり)。
+
 ```bash
 npx @google/clasp login            # ~/.clasprc.json を生成
 
