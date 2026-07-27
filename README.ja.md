@@ -80,7 +80,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 詳細な手順: **[docs/secret-manager.ja.md](docs/secret-manager.ja.md)**。概要:
 
-1. **認証情報の格納**: デプロイ用アカウントで `clasp login` → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
+1. **認証情報の格納**: デプロイ用アカウントの [Apps Script API を有効化](https://script.google.com/home/usersettings)し、そのアカウントで `clasp login` → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
 2. **WIF プール `gas-fleet` を作成**し、`github` / `gitlab` プロバイダを org/group に attribute 制限
 3. **`roles/secretmanager.secretAccessor` を付与**: CI の `principalSet://` と開発者 Google グループへ
 4. **org/group の CI 変数** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` を設定（両プラットフォーム同名）

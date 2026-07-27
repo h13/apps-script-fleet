@@ -57,19 +57,42 @@ GITLAB_URL=https://gitlab.example.com  # または https://gitlab.com
 gcloud config set project "$PROJECT_ID"
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 
-# 0. API の有効化
-gcloud services enable secretmanager.googleapis.com sts.googleapis.com iam.googleapis.com
+# 0. API の有効化(cloudresourcemanager は GitHub Action がプロジェクト解決に
+#    使用 — 無いと secret 取得が実行時に失敗する)
+gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
+  iam.googleapis.com cloudresourcemanager.googleapis.com
 ```
 
 ### 1. secret の作成
 
 デプロイ専用 Google アカウント(例: `gas-deploy@yourcompany.com`)で:
 
+まずそのアカウントの **Apps Script API** を
+[script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+で有効化します — アカウント単位の設定で、無効のままだと `clasp create`/`push`
+が `User has not enabled the Apps Script API` で失敗します(反映まで数分
+かかる場合あり)。
+
 ```bash
 npx @google/clasp login            # ~/.clasprc.json を生成
+
+# 格納前にアカウントを検証する — このファイルがフリート全体のデプロイ主体を
+# 決める。過去の作業で残った古い ~/.clasprc.json を誤って格納しやすい:
+node -e 'const rc=JSON.parse(require("fs").readFileSync(process.env.HOME+"/.clasprc.json","utf8"));const t=rc.tokens?.default??{client_id:rc.oauth2ClientSettings?.clientId,client_secret:rc.oauth2ClientSettings?.clientSecret,refresh_token:rc.token?.refresh_token};fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:t.client_id,client_secret:t.client_secret,refresh_token:t.refresh_token,grant_type:"refresh_token"})}).then(r=>r.json()).then(x=>fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)",{headers:{Authorization:"Bearer "+x.access_token}})).then(r=>r.json()).then(w=>console.log("deploy account:",w.user?.emailAddress))'
+
 gcloud secrets create clasp-credentials --replication-policy=automatic
 gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ```
+
+> 組織ポリシー `constraints/gcp.resourceLocations` が有効な組織では、
+> `automatic`(global)レプリケーションは `FAILED_PRECONDITION` で拒否され
+> ます。許可リージョンにレプリカを固定してください — リソース名・アクセス
+> パス・IAM は変わりません:
+>
+> ```bash
+> gcloud secrets create clasp-credentials \
+>   --replication-policy=user-managed --locations=asia-northeast1
+> ```
 
 ### 2. WIF プールの作成
 
@@ -107,17 +130,33 @@ gcloud iam workload-identity-pools providers create-oidc gitlab \
 
 ### 4. CI へのアクセス付与(org/group 単位)
 
+secret リソースではなく、**プロジェクトレベル**で付与します:
+
 ```bash
 POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.repository_owner/${ORG}"
 
-gcloud secrets add-iam-policy-binding clasp-credentials \
-  --role=roles/secretmanager.secretAccessor \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role=roles/secretmanager.secretAccessor --condition=None \
   --member="principalSet://iam.googleapis.com/${POOL}/attribute.namespace_path/${GROUP}"
 ```
+
+> **フィールドノート — なぜプロジェクトレベルか:** `principalSet://` への
+> `secretAccessor` を secret 単体に付与(`gcloud secrets
+> add-iam-policy-binding`)した場合、バインディングから30分以上経過しても
+> フェデレーテッド CI プリンシパルに対して `PERMISSION_DENIED` が返り続ける
+> 事象を実環境で確認しました。同じメンバーをプロジェクトレベルで付与すると
+> 数分で有効になります。中央プロジェクトはフリートの secret 専用なので、
+> プロジェクトレベル付与でも実質的なアクセス範囲は広がりません — ただし
+> 将来このプロジェクトに無関係な secret を追加する場合は、この判断を再検討
+> してください。
+>
+> また、`principalSet://` の IAM 変更は反映まで数分かかることがあります。
+> 直後の初回 CI 実行での `PERMISSION_DENIED` は「待ってリトライ」で解決する
+> ことが多いです。
 
 ### 5. 開発者へのアクセス付与
 
@@ -131,14 +170,23 @@ gcloud secrets add-iam-policy-binding clasp-credentials \
 
 **デフォルト OFF・課金対象**です — アクセス単位の監査証跡が必要なら必須。
 [IAM → 監査ログ](https://console.cloud.google.com/iam-admin/audit)で
-**Secret Manager API** の **Data Read** を有効化するか、ポリシーで:
+**Secret Manager API** の **Data Read** を有効化するか、スクリプトで
+(既存の audit 設定を壊さずに `DATA_READ` をマージします):
 
-```yaml
-# gcloud projects get-iam-policy $PROJECT_ID > policy.yaml に追記して set-iam-policy
-auditConfigs:
-  - service: secretmanager.googleapis.com
-    auditLogConfigs:
-      - logType: DATA_READ
+```bash
+gcloud projects get-iam-policy "$PROJECT_ID" --format=json > /tmp/policy.json
+python3 - <<'EOF'
+import json
+p = json.load(open("/tmp/policy.json"))
+a = p.setdefault("auditConfigs", [])
+e = next((x for x in a if x.get("service") == "secretmanager.googleapis.com"), None)
+if e is None:
+    a.append({"service": "secretmanager.googleapis.com", "auditLogConfigs": [{"logType": "DATA_READ"}]})
+elif not any(c.get("logType") == "DATA_READ" for c in e.setdefault("auditLogConfigs", [])):
+    e["auditLogConfigs"].append({"logType": "DATA_READ"})
+json.dump(p, open("/tmp/policy.json", "w"), indent=2)
+EOF
+gcloud projects set-iam-policy "$PROJECT_ID" /tmp/policy.json
 ```
 
 以後、すべての `AccessSecretVersion` がフェデレーテッドプリンシパル付きで
@@ -154,7 +202,21 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables(secret ではなく
-  variable — 秘密情報ではないため)。
+  variable — 秘密情報ではないため)。CLI の場合は `admin:org` スコープが必要
+  です(403 が出たら先に `gh auth refresh -h github.com -s admin:org`):
+
+  ```bash
+  gh variable set GCP_WIF_PROVIDER --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet/providers/github"
+  gh variable set CLASPRC_SECRET --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
+  ```
+
+  環境変数 `GH_TOKEN` が設定されているとそちらが優先され、`gh auth refresh`
+  も新スコープも効きません — その場合はコマンドに `env -u GH_TOKEN` を
+  前置してください。
+
+  個人アカウント(org なし)の場合はリポジトリ変数として設定します。
 - **GitLab**: Group → Settings → CI/CD → Variables。**unprotected** で設定して
   ください: protected にすると `dev` パイプラインから見えず、dev デプロイが
   気づかないうちに legacy モードに落ちます。
@@ -182,6 +244,10 @@ gcloud auth login          # 個人アカウント、マシンごとに1回
 1. デプロイ用アカウントで再度 `clasp login` →
    `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`。
    CI は `latest` 参照なので即時反映 — リポ側の作業はゼロ。
+   実行前に §1 のアカウント検証ワンライナーを必ず実行すること — この同じ
+   フローは**デプロイアカウントの交換**にも使われるため、マシンに残った
+   別アカウントの `~/.clasprc.json` を格納するとフリートのデプロイ主体が
+   静かに変わってしまいます。
 2. 任意リポの dev デプロイで検証。
 3. `gcloud secrets versions disable <old>` → 猶予期間の後
    `gcloud secrets versions destroy <old>`。
@@ -201,7 +267,8 @@ gcloud auth login          # 個人アカウント、マシンごとに1回
 
 ## ハードニング: リポ単位付与(オプション)
 
-org/group 一括の `principalSet` の代わりに、リポ単位で付与できます:
+org/group 一括の `principalSet` の代わりに、リポ単位で付与できます(§4 の
+フィールドノートのとおり、こちらもプロジェクトレベルで):
 
 ```bash
 # GitHub — 特定リポのみ
@@ -230,8 +297,12 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 | STS 403 `unable to acquire impersonated credentials` / `The given credential is rejected by the attribute condition` | プロバイダの `--attribute-condition` 不一致(org/group 違い)、または JWT の `aud` が `--allowed-audiences` と不一致。JWT の `aud` = `$CI_SERVER_URL`(スキーム込み・末尾スラッシュ無し)。 |
 | STS 400 `Invalid value for "audience"` | STS リクエストの `audience` は `//iam.googleapis.com/projects/<NUM>/…/providers/<name>` — **`https:` プレフィックス無し**、プロジェクト**番号**を使う。 |
 | STS 400 `mapped attribute google.subject exceeds the 127 bytes limit` | JWT の `sub` が長すぎる(深くネストした GitLab group、長い GitHub repo/environment 名)。`google.subject` を短いクレームに再マップする(例: GitLab は `assertion.project_path`)— IAM は attribute にバインドしているため他は変更不要。 |
-| Secret Manager 403 `PERMISSION_DENIED`(CI) | `principalSet` バインディングの欠落・誤り。attribute 名(`repository_owner` / `namespace_path`)と値を確認。 |
+| `secrets create` が `FAILED_PRECONDITION`(`constraints/gcp.resourceLocations`) | 組織ポリシーが global レプリケーションを禁止。`--replication-policy=user-managed --locations=<許可リージョン>` で作成(許可リージョンは `gcloud org-policies describe gcp.resourceLocations --project=… --effective` で確認)。 |
+| CI の secret 取得時に `cloud Resource Manager API has not been used in project …` | 中央プロジェクトで `cloudresourcemanager.googleapis.com` を有効化 — `get-secretmanager-secrets` がプロジェクト解決に使用。 |
+| Secret Manager 403 `PERMISSION_DENIED`(CI)— セットアップ直後 | `principalSet` の IAM バインディングは反映に数分かかる。2〜5分待ってリトライしてから疑うこと。 |
+| Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り(attribute 名 `repository_owner` / `namespace_path` と値を確認)、**または secret 単体への付与になっている — プロジェクトレベルに移す**(実環境で検証済み、§4 参照)。 |
 | `PERMISSION_DENIED`(開発者) | 開発者 Google グループに未所属、またはグループに `secretAccessor` が無い。 |
+| GAS スクリプトの所有者が意図しないアカウントになっている | マシンに残っていた古い `~/.clasprc.json` から secret を格納したのが原因。スクリプトの所有権はドメイン跨ぎで移管できず、clasp トークンではゴミ箱送りすらできない(`drive.file` スコープ + スクリプトは Apps Script API 経由作成のため「アプリのファイル」扱いにならない)。対処: 正しいアカウントで `clasp login` → secret をローテーション → 各リポで `init.sh` 再実行 → 孤児スクリプトは旧所有者が手動削除。 |
 | GitLab ジョブが script 前に `id_tokens` エラーで失敗 | GitLab < 16.1(`aud` の変数展開)または < 15.7(`id_tokens` 自体)。アップグレードするか、旧テンプレ + legacy モードを継続。 |
 | GitLab で `main` は WIF が通るが `dev` で失敗 | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` が **protected** 変数になっている。unprotected に変更。 |
 | エアギャップ GitLab | WIF は `sts.googleapis.com` + `secretmanager.googleapis.com` への egress が必要。legacy `CLASPRC_JSON` を継続使用。 |

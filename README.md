@@ -80,7 +80,7 @@ Before your team can use Apps Script Fleet, an org admin stores the shared clasp
 
 Full step-by-step guide: **[docs/secret-manager.md](docs/secret-manager.md)**. In outline:
 
-1. **Store credentials**: `clasp login` with the deploy account → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
+1. **Store credentials**: enable the [Apps Script API](https://script.google.com/home/usersettings) for the deploy account, `clasp login` with it → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
 2. **Create WIF pool `gas-fleet`** with `github` / `gitlab` providers, attribute-restricted to your org/group
 3. **Grant `roles/secretmanager.secretAccessor`** to the CI `principalSet://` and to the developer Google group
 4. **Set org/group CI variables** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` (same names on both platforms)
