@@ -11,14 +11,27 @@
 post_deploy:
   stage: deploy
   image: node:24@sha256:3a09aa6354567619221ef6c45a5051b671f953f0a1924d1f819ffb236e520e6b
+  # aud must match the WIF provider's --allowed-audiences (GitLab >= 16.1).
+  id_tokens:
+    GCP_OIDC_TOKEN:
+      aud: $CI_SERVER_URL
   before_script:
     - corepack enable
     - pnpm config set store-dir .pnpm-store
     - pnpm install --frozen-lockfile
   script:
+    # Dual-mode credentials — same rules as .deploy_base (docs/secret-manager.md).
     - |
       umask 077
-      printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+      if [[ -n "${GCP_WIF_PROVIDER:-}" ]]; then
+        [[ -n "${CLASPRC_SECRET:-}" ]] || { echo "Error: GCP_WIF_PROVIDER is set but CLASPRC_SECRET is not." >&2; exit 1; }
+        ./scripts/gcp-get-secret.sh "$CLASPRC_SECRET" > ~/.clasprc.json
+      elif [[ -n "${CLASPRC_JSON:-}" ]]; then
+        printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+      else
+        echo "Error: no clasp credentials. Set group variables GCP_WIF_PROVIDER + CLASPRC_SECRET (Secret Manager), or CLASPRC_JSON (legacy)." >&2
+        exit 1
+      fi
       printf '%s' "$CLASP_JSON" > .clasp.json
     - ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
   rules:
