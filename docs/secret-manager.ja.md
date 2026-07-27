@@ -212,6 +212,10 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
     --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
   ```
 
+  環境変数 `GH_TOKEN` が設定されているとそちらが優先され、`gh auth refresh`
+  も新スコープも効きません — その場合はコマンドに `env -u GH_TOKEN` を
+  前置してください。
+
   個人アカウント(org なし)の場合はリポジトリ変数として設定します。
 - **GitLab**: Group → Settings → CI/CD → Variables。**unprotected** で設定して
   ください: protected にすると `dev` パイプラインから見えず、dev デプロイが

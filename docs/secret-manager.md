@@ -211,6 +211,10 @@ org-wide grant.
     --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
   ```
 
+  If `GH_TOKEN` is exported in your environment it overrides the stored
+  credential and blocks both `gh auth refresh` and the new scope — prefix
+  the commands with `env -u GH_TOKEN` in that case.
+
   On a personal account (no org), set them as repository variables instead.
 - **GitLab**: Group → Settings → CI/CD → Variables. Set them **unprotected**:
   protected variables are invisible on `dev` pipelines, which would silently
