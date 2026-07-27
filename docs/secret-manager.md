@@ -169,14 +169,23 @@ gcloud secrets add-iam-policy-binding clasp-credentials \
 
 **Off by default and billed** — required if you want per-access audit trails.
 In [IAM → Audit Logs](https://console.cloud.google.com/iam-admin/audit), enable
-**Data Read** for **Secret Manager API**, or via policy:
+**Data Read** for **Secret Manager API**, or scriptably (merges `DATA_READ`
+into the project IAM policy without clobbering existing audit configs):
 
-```yaml
-# gcloud projects get-iam-policy $PROJECT_ID > policy.yaml, add, then set-iam-policy
-auditConfigs:
-  - service: secretmanager.googleapis.com
-    auditLogConfigs:
-      - logType: DATA_READ
+```bash
+gcloud projects get-iam-policy "$PROJECT_ID" --format=json > /tmp/policy.json
+python3 - <<'EOF'
+import json
+p = json.load(open("/tmp/policy.json"))
+a = p.setdefault("auditConfigs", [])
+e = next((x for x in a if x.get("service") == "secretmanager.googleapis.com"), None)
+if e is None:
+    a.append({"service": "secretmanager.googleapis.com", "auditLogConfigs": [{"logType": "DATA_READ"}]})
+elif not any(c.get("logType") == "DATA_READ" for c in e.setdefault("auditLogConfigs", [])):
+    e["auditLogConfigs"].append({"logType": "DATA_READ"})
+json.dump(p, open("/tmp/policy.json", "w"), indent=2)
+EOF
+gcloud projects set-iam-policy "$PROJECT_ID" /tmp/policy.json
 ```
 
 Afterwards every `AccessSecretVersion` appears in Cloud Logging with the
@@ -192,8 +201,17 @@ org-wide grant.
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables (not secrets —
-  these values are not sensitive). On a personal account (no org), set them
-  as repository variables instead.
+  these values are not sensitive), or via CLI — note the `admin:org` scope
+  (`gh auth refresh -h github.com -s admin:org` first if you get a 403):
+
+  ```bash
+  gh variable set GCP_WIF_PROVIDER --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet/providers/github"
+  gh variable set CLASPRC_SECRET --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
+  ```
+
+  On a personal account (no org), set them as repository variables instead.
 - **GitLab**: Group → Settings → CI/CD → Variables. Set them **unprotected**:
   protected variables are invisible on `dev` pipelines, which would silently
   drop dev deploys into legacy mode.

@@ -170,14 +170,23 @@ gcloud secrets add-iam-policy-binding clasp-credentials \
 
 **デフォルト OFF・課金対象**です — アクセス単位の監査証跡が必要なら必須。
 [IAM → 監査ログ](https://console.cloud.google.com/iam-admin/audit)で
-**Secret Manager API** の **Data Read** を有効化するか、ポリシーで:
+**Secret Manager API** の **Data Read** を有効化するか、スクリプトで
+(既存の audit 設定を壊さずに `DATA_READ` をマージします):
 
-```yaml
-# gcloud projects get-iam-policy $PROJECT_ID > policy.yaml に追記して set-iam-policy
-auditConfigs:
-  - service: secretmanager.googleapis.com
-    auditLogConfigs:
-      - logType: DATA_READ
+```bash
+gcloud projects get-iam-policy "$PROJECT_ID" --format=json > /tmp/policy.json
+python3 - <<'EOF'
+import json
+p = json.load(open("/tmp/policy.json"))
+a = p.setdefault("auditConfigs", [])
+e = next((x for x in a if x.get("service") == "secretmanager.googleapis.com"), None)
+if e is None:
+    a.append({"service": "secretmanager.googleapis.com", "auditLogConfigs": [{"logType": "DATA_READ"}]})
+elif not any(c.get("logType") == "DATA_READ" for c in e.setdefault("auditLogConfigs", [])):
+    e["auditLogConfigs"].append({"logType": "DATA_READ"})
+json.dump(p, open("/tmp/policy.json", "w"), indent=2)
+EOF
+gcloud projects set-iam-policy "$PROJECT_ID" /tmp/policy.json
 ```
 
 以後、すべての `AccessSecretVersion` がフェデレーテッドプリンシパル付きで
@@ -193,8 +202,17 @@ Cloud Logging に記録されます — `attribute.repository`(GitHub)/
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables(secret ではなく
-  variable — 秘密情報ではないため)。個人アカウント(org なし)の場合は
-  リポジトリ変数として設定します。
+  variable — 秘密情報ではないため)。CLI の場合は `admin:org` スコープが必要
+  です(403 が出たら先に `gh auth refresh -h github.com -s admin:org`):
+
+  ```bash
+  gh variable set GCP_WIF_PROVIDER --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet/providers/github"
+  gh variable set CLASPRC_SECRET --org "$ORG" --visibility all \
+    --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
+  ```
+
+  個人アカウント(org なし)の場合はリポジトリ変数として設定します。
 - **GitLab**: Group → Settings → CI/CD → Variables。**unprotected** で設定して
   ください: protected にすると `dev` パイプラインから見えず、dev デプロイが
   気づかないうちに legacy モードに落ちます。
