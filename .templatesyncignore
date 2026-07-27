@@ -45,6 +45,7 @@
 # Scripts
 :!scripts/init.sh
 :!scripts/set-properties.sh
+:!scripts/gcp-get-secret.sh
 
 # Hook examples
 :!.github/hooks/post-deploy.sh.example
