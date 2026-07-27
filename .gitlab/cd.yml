@@ -9,8 +9,10 @@
     - pnpm install --frozen-lockfile
   script:
     - pnpm run build
-    - echo "$CLASPRC_JSON" > ~/.clasprc.json
-    - echo "$CLASP_JSON" > .clasp.json
+    - |
+      umask 077
+      printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+      printf '%s' "$CLASP_JSON" > .clasp.json
     - pnpm exec clasp push -f
     - pnpm exec clasp deploy -i "$DEPLOYMENT_ID" --description "GitLab CD from $CI_COMMIT_REF_NAME@$CI_COMMIT_SHORT_SHA"
     - |

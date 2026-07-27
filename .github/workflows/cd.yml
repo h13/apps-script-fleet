@@ -43,9 +43,13 @@ jobs:
           DEPLOY_ENV: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'development' }}
 
       - name: Setup clasp credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          CLASP_JSON: ${{ secrets.CLASP_JSON }}
         run: |
-          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
-          echo '${{ secrets.CLASP_JSON }}' > .clasp.json
+          umask 077
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '%s' "$CLASP_JSON" > .clasp.json
 
       - name: Push to GAS
         run: pnpm exec clasp push -f

@@ -16,8 +16,10 @@ post_deploy:
     - pnpm config set store-dir .pnpm-store
     - pnpm install --frozen-lockfile
   script:
-    - echo "$CLASPRC_JSON" > ~/.clasprc.json
-    - echo "$CLASP_JSON" > .clasp.json
+    - |
+      umask 077
+      printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+      printf '%s' "$CLASP_JSON" > .clasp.json
     - ./scripts/set-properties.sh --env SCRIPT_PROPERTIES
   rules:
     - if: $SCRIPT_PROPERTIES && $GCP_PROJECT_NUMBER
