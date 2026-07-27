@@ -69,6 +69,11 @@ gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
 
 ```bash
 npx @google/clasp login            # ~/.clasprc.json を生成
+
+# 格納前にアカウントを検証する — このファイルがフリート全体のデプロイ主体を
+# 決める。過去の作業で残った古い ~/.clasprc.json を誤って格納しやすい:
+node -e 'const rc=JSON.parse(require("fs").readFileSync(process.env.HOME+"/.clasprc.json","utf8"));const t=rc.tokens?.default??{client_id:rc.oauth2ClientSettings?.clientId,client_secret:rc.oauth2ClientSettings?.clientSecret,refresh_token:rc.token?.refresh_token};fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:t.client_id,client_secret:t.client_secret,refresh_token:t.refresh_token,grant_type:"refresh_token"})}).then(r=>r.json()).then(x=>fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)",{headers:{Authorization:"Bearer "+x.access_token}})).then(r=>r.json()).then(w=>console.log("deploy account:",w.user?.emailAddress))'
+
 gcloud secrets create clasp-credentials --replication-policy=automatic
 gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ```
@@ -211,6 +216,10 @@ gcloud auth login          # 個人アカウント、マシンごとに1回
 1. デプロイ用アカウントで再度 `clasp login` →
    `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`。
    CI は `latest` 参照なので即時反映 — リポ側の作業はゼロ。
+   実行前に §1 のアカウント検証ワンライナーを必ず実行すること — この同じ
+   フローは**デプロイアカウントの交換**にも使われるため、マシンに残った
+   別アカウントの `~/.clasprc.json` を格納するとフリートのデプロイ主体が
+   静かに変わってしまいます。
 2. 任意リポの dev デプロイで検証。
 3. `gcloud secrets versions disable <old>` → 猶予期間の後
    `gcloud secrets versions destroy <old>`。
@@ -265,6 +274,7 @@ org/group 一括の `principalSet` の代わりに、リポ単位で付与でき
 | Secret Manager 403 `PERMISSION_DENIED`(CI)— セットアップ直後 | `principalSet` の IAM バインディングは反映に数分かかる。2〜5分待ってリトライしてから疑うこと。 |
 | Secret Manager 403 `PERMISSION_DENIED`(CI)— 継続する場合 | `principalSet` バインディングの欠落・誤り(attribute 名 `repository_owner` / `namespace_path` と値を確認)、**または secret 単体への付与になっている — プロジェクトレベルに移す**(実環境で検証済み、§4 参照)。 |
 | `PERMISSION_DENIED`(開発者) | 開発者 Google グループに未所属、またはグループに `secretAccessor` が無い。 |
+| GAS スクリプトの所有者が意図しないアカウントになっている | マシンに残っていた古い `~/.clasprc.json` から secret を格納したのが原因。スクリプトの所有権はドメイン跨ぎで移管できず、clasp トークンではゴミ箱送りすらできない(`drive.file` スコープ + スクリプトは Apps Script API 経由作成のため「アプリのファイル」扱いにならない)。対処: 正しいアカウントで `clasp login` → secret をローテーション → 各リポで `init.sh` 再実行 → 孤児スクリプトは旧所有者が手動削除。 |
 | GitLab ジョブが script 前に `id_tokens` エラーで失敗 | GitLab < 16.1(`aud` の変数展開)または < 15.7(`id_tokens` 自体)。アップグレードするか、旧テンプレ + legacy モードを継続。 |
 | GitLab で `main` は WIF が通るが `dev` で失敗 | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` が **protected** 変数になっている。unprotected に変更。 |
 | エアギャップ GitLab | WIF は `sts.googleapis.com` + `secretmanager.googleapis.com` への egress が必要。legacy `CLASPRC_JSON` を継続使用。 |

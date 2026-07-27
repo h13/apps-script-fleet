@@ -68,6 +68,12 @@ With the dedicated deploy Google account (e.g. `gas-deploy@yourcompany.com`):
 
 ```bash
 npx @google/clasp login            # writes ~/.clasprc.json
+
+# VERIFY the account before storing it — this file defines the fleet-wide
+# deploy identity, and a stale ~/.clasprc.json left over from earlier work
+# is easy to store by accident:
+node -e 'const rc=JSON.parse(require("fs").readFileSync(process.env.HOME+"/.clasprc.json","utf8"));const t=rc.tokens?.default??{client_id:rc.oauth2ClientSettings?.clientId,client_secret:rc.oauth2ClientSettings?.clientSecret,refresh_token:rc.token?.refresh_token};fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:t.client_id,client_secret:t.client_secret,refresh_token:t.refresh_token,grant_type:"refresh_token"})}).then(r=>r.json()).then(x=>fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)",{headers:{Authorization:"Bearer "+x.access_token}})).then(r=>r.json()).then(w=>console.log("deploy account:",w.user?.emailAddress))'
+
 gcloud secrets create clasp-credentials --replication-policy=automatic
 gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ```
@@ -209,6 +215,9 @@ Impossible under the legacy model; now routine:
 1. `clasp login` again with the deploy account, then
    `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`.
    CI reads `latest`, so this takes effect immediately — zero repo-side work.
+   Run the account-verification one-liner from §1 first — the same rotation
+   flow is also how you *replace* the deploy account, and storing the wrong
+   machine-local `~/.clasprc.json` silently changes the fleet's identity.
 2. Verify with any repo's dev deploy.
 3. `gcloud secrets versions disable <old>` → after a grace period
    `gcloud secrets versions destroy <old>`.
@@ -263,6 +272,7 @@ which the Apps Script API makes unavoidable.
 | Secret Manager 403 `PERMISSION_DENIED` (CI) — right after setup | `principalSet` IAM bindings take a few minutes to propagate. Wait 2–5 minutes and retry before changing anything. |
 | Secret Manager 403 `PERMISSION_DENIED` (CI) — persistent | Either the `principalSet` binding is missing/wrong (check the attribute name — `repository_owner` vs `namespace_path` — and value), **or the grant is on the secret resource only — move it to project level** (field-verified, see §4). |
 | `PERMISSION_DENIED` (developer) | Not in the developer Google group, or the group lacks `secretAccessor`. |
+| GAS scripts are owned by the wrong account | The secret was seeded from a stale machine-local `~/.clasprc.json`. Scripts cannot change owners across domains and the clasp token cannot even trash them (`drive.file` scope; scripts are created via the Apps Script API, so they are not "app files"). Fix: `clasp login` with the right account → rotate the secret → re-run `init.sh` per repo → the old owner deletes the orphaned scripts manually. |
 | GitLab job fails before script with `id_tokens` error | GitLab < 16.1 (variable expansion in `aud`) or < 15.7 (`id_tokens` itself). Upgrade or stay on legacy mode with an older template revision. |
 | WIF works on `main` but not `dev` (GitLab) | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` set as **protected** variables. Make them unprotected. |
 | Air-gapped GitLab | WIF needs egress to `sts.googleapis.com` + `secretmanager.googleapis.com`. Keep using legacy `CLASPRC_JSON`. |
