@@ -20,14 +20,14 @@ Authentication is two-tier:
 1. **Getting `.clasprc.json` out of Secret Manager** — WIF (CI) or personal
    gcloud (developers). This tier is where IAM gives you scoping, audit logs,
    and rotation.
-2. **clasp deploying to GAS** — the fetched `.clasprc.json`, exactly as before.
+2. **clasp deploying to Apps Script** — the fetched `.clasprc.json`, exactly as before.
 
 Everything is centralized — **zero per-repo setup**:
 
 | Resource | Count | Scope |
 | --- | --- | --- |
 | Secret `clasp-credentials` | 1 | Central GCP project; CI always reads `latest` |
-| WIF pool `gas-fleet` | 1 | Providers `github` + `gitlab` under it |
+| WIF pool `apps-script-fleet` | 1 | Providers `github` + `gitlab` under it |
 | IAM binding | org/group-wide | `principalSet://…/attribute.repository_owner/<org>` (GitHub) / `attribute.namespace_path/<group>` (GitLab) |
 | CI variables `GCP_WIF_PROVIDER`, `CLASPRC_SECRET` | org/group-level | Inherited by every repo |
 
@@ -64,7 +64,7 @@ gcloud services enable secretmanager.googleapis.com sts.googleapis.com \
 
 ### 1. Create the secret
 
-With the dedicated deploy Google account (e.g. `gas-deploy@yourcompany.com`):
+With the dedicated deploy Google account (e.g. `apps-script-deploy@yourcompany.com`):
 
 First enable the **Apps Script API** for that account at
 [script.google.com/home/usersettings](https://script.google.com/home/usersettings)
@@ -97,8 +97,8 @@ gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"
 ### 2. Create the WIF pool
 
 ```bash
-gcloud iam workload-identity-pools create gas-fleet \
-  --location=global --display-name="GAS Fleet CI"
+gcloud iam workload-identity-pools create apps-script-fleet \
+  --location=global --display-name="Apps Script Fleet CI"
 ```
 
 ### 3a. GitHub provider
@@ -108,7 +108,7 @@ is a multi-tenant issuer shared by every GitHub org.
 
 ```bash
 gcloud iam workload-identity-pools providers create-oidc github \
-  --location=global --workload-identity-pool=gas-fleet \
+  --location=global --workload-identity-pool=apps-script-fleet \
   --issuer-uri="https://token.actions.githubusercontent.com" \
   --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
   --attribute-condition="assertion.repository_owner == '${ORG}'"
@@ -118,7 +118,7 @@ gcloud iam workload-identity-pools providers create-oidc github \
 
 ```bash
 gcloud iam workload-identity-pools providers create-oidc gitlab \
-  --location=global --workload-identity-pool=gas-fleet \
+  --location=global --workload-identity-pool=apps-script-fleet \
   --issuer-uri="${GITLAB_URL}" \
   --allowed-audiences="${GITLAB_URL}" \
   --attribute-mapping="google.subject=assertion.sub,attribute.project_path=assertion.project_path,attribute.namespace_path=assertion.namespace_path" \
@@ -133,7 +133,7 @@ sets to `$CI_SERVER_URL` (scheme included, no trailing slash).
 Grant at the **project level**, not on the secret resource:
 
 ```bash
-POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet"
+POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/apps-script-fleet"
 
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role=roles/secretmanager.secretAccessor --condition=None \
@@ -162,7 +162,7 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 ```bash
 gcloud secrets add-iam-policy-binding clasp-credentials \
   --role=roles/secretmanager.secretAccessor \
-  --member="group:gas-developers@yourcompany.com"
+  --member="group:apps-script-developers@yourcompany.com"
 ```
 
 ### 6. Enable Data Access audit logs
@@ -197,7 +197,7 @@ org-wide grant.
 
 | Variable | Value |
 | --- | --- |
-| `GCP_WIF_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/gas-fleet/providers/github` (GitHub) / `…/providers/gitlab` (GitLab) |
+| `GCP_WIF_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/apps-script-fleet/providers/github` (GitHub) / `…/providers/gitlab` (GitLab) |
 | `CLASPRC_SECRET` | `projects/<PROJECT_ID>/secrets/clasp-credentials` |
 
 - **GitHub**: Organization → Settings → Actions → Variables (not secrets —
@@ -206,7 +206,7 @@ org-wide grant.
 
   ```bash
   gh variable set GCP_WIF_PROVIDER --org "$ORG" --visibility all \
-    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/gas-fleet/providers/github"
+    --body "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/apps-script-fleet/providers/github"
   gh variable set CLASPRC_SECRET --org "$ORG" --visibility all \
     --body "projects/${PROJECT_ID}/secrets/clasp-credentials"
   ```
@@ -284,7 +284,7 @@ prefer `repository` / `environment` claims.
 ## Scope Boundary (Known Limitation)
 
 The fetched `.clasprc.json` is still a user OAuth token that can operate on
-**every** GAS project in the fleet. This migration improves distribution,
+**every** Apps Script project in the fleet. This migration improves distribution,
 storage, revocation, and audit — not the blast radius of the token itself,
 which the Apps Script API makes unavoidable.
 
@@ -300,7 +300,7 @@ which the Apps Script API makes unavoidable.
 | Secret Manager 403 `PERMISSION_DENIED` (CI) — right after setup | `principalSet` IAM bindings take a few minutes to propagate. Wait 2–5 minutes and retry before changing anything. |
 | Secret Manager 403 `PERMISSION_DENIED` (CI) — persistent | Either the `principalSet` binding is missing/wrong (check the attribute name — `repository_owner` vs `namespace_path` — and value), **or the grant is on the secret resource only — move it to project level** (field-verified, see §4). |
 | `PERMISSION_DENIED` (developer) | Not in the developer Google group, or the group lacks `secretAccessor`. |
-| GAS scripts are owned by the wrong account | The secret was seeded from a stale machine-local `~/.clasprc.json`. Scripts cannot change owners across domains and the clasp token cannot even trash them (`drive.file` scope; scripts are created via the Apps Script API, so they are not "app files"). Fix: `clasp login` with the right account → rotate the secret → re-run `init.sh` per repo → the old owner deletes the orphaned scripts manually. |
+| Scripts are owned by the wrong account | The secret was seeded from a stale machine-local `~/.clasprc.json`. Scripts cannot change owners across domains and the clasp token cannot even trash them (`drive.file` scope; scripts are created via the Apps Script API, so they are not "app files"). Fix: `clasp login` with the right account → rotate the secret → re-run `init.sh` per repo → the old owner deletes the orphaned scripts manually. |
 | GitLab job fails before script with `id_tokens` error | GitLab < 16.1 (variable expansion in `aud`) or < 15.7 (`id_tokens` itself). Upgrade or stay on legacy mode with an older template revision. |
 | WIF works on `main` but not `dev` (GitLab) | `GCP_WIF_PROVIDER` / `CLASPRC_SECRET` set as **protected** variables. Make them unprotected. |
 | Air-gapped GitLab | WIF needs egress to `sts.googleapis.com` + `secretmanager.googleapis.com`. Keep using legacy `CLASPRC_JSON`. |

@@ -14,8 +14,8 @@
 
 Store the shared clasp credentials in Google Cloud Secret Manager and let CI fetch them keylessly via Workload Identity Federation — full guide: [secret-manager.md](secret-manager.md). In short:
 
-1. Create a dedicated Google account for CI/CD (e.g., `gas-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
-2. Create the WIF pool `gas-fleet` with a `gitlab` provider: `--issuer-uri` and `--allowed-audiences` both set to your GitLab base URL (the CI JWT's `aud` is `$CI_SERVER_URL`), attribute-restricted to your group.
+1. Create a dedicated Google account for CI/CD (e.g., `apps-script-deploy@yourcompany.com`), run `clasp login`, and store `~/.clasprc.json` in the `clasp-credentials` secret.
+2. Create the WIF pool `apps-script-fleet` with a `gitlab` provider: `--issuer-uri` and `--allowed-audiences` both set to your GitLab base URL (the CI JWT's `aud` is `$CI_SERVER_URL`), attribute-restricted to your group.
 3. Grant `roles/secretmanager.secretAccessor` to `principalSet://…/attribute.namespace_path/<group>`.
 4. Set **Group CI/CD Variables** `GCP_WIF_PROVIDER` and `CLASPRC_SECRET` — **unprotected** (protected variables are invisible on `dev` pipelines, silently dropping dev deploys into legacy mode).
 
@@ -35,7 +35,7 @@ Used automatically when `GCP_WIF_PROVIDER` is not set: add the contents of `~/.c
 
 ### 2. Create the Template Project
 
-Import the upstream template into your GitLab Group. This project serves as the source for all GAS projects in your organization.
+Import the upstream template into your GitLab Group. This project serves as the source for all Apps Script projects in your organization.
 
 **Option A — Import from GitHub (requires network access to github.com):**
 
@@ -58,7 +58,7 @@ Then register it as a **[Group project template](https://docs.gitlab.com/user/gr
 
 ### 3. Configure Template Sync on the Template Project
 
-The Template Project syncs from GitHub to stay up to date. Configure this on the **Template Project only** — individual GAS projects do not need this.
+The Template Project syncs from GitHub to stay up to date. Configure this on the **Template Project only** — individual Apps Script projects do not need this.
 
 1. Create a **Project Access Token** (Settings → Access Tokens) with `write_repository` scope
 2. Add it as a CI/CD Variable named `GITLAB_PUSH_TOKEN`
@@ -77,11 +77,11 @@ Add `TEMPLATE_REPO_URL` as a **Group CI/CD Variable** pointing to the Template P
 https://gitlab.yourcompany.com/<your-group>/apps-script-fleet.git
 ```
 
-All GAS projects within the group inherit this variable automatically, so they sync from the Template Project instead of GitHub.
+All Apps Script projects within the group inherit this variable automatically, so they sync from the Template Project instead of GitHub.
 
 > **How precedence works:** The Template Project's project-level `TEMPLATE_REPO_URL` (pointing to GitHub or an internal mirror) takes precedence over the Group Variable. This means the Template Project syncs from GitHub, while User Projects sync from the Template Project.
 
-## Per Project: Create a New GAS Repository
+## Per Project: Create a New Apps Script Repository
 
 ### 1. Create the project
 
@@ -172,7 +172,7 @@ On GitLab Free tier, "Create from template" (Group project templates) is not ava
 From the template repository root:
 
 ```bash
-./scripts/create-gitlab-project.sh --group my-org --name my-gas-project
+./scripts/create-gitlab-project.sh --group my-org --name my-apps-script-project
 ```
 
 This creates a new GitLab repository, copies template files, and pushes the initial commit.
@@ -187,10 +187,10 @@ Options:
 | `--visibility`  | `private`, `internal`, or `public`   | `private`   |
 | `--description` | Project description                  |             |
 
-### 2. Initialize GAS projects and CI/CD
+### 2. Initialize Apps Script projects and CI/CD
 
 ```bash
-cd ../my-gas-project
+cd ../my-apps-script-project
 pnpm install
 ./scripts/init.sh --title "My Script" [--gcp-project <NUMBER>]
 ```

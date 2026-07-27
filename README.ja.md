@@ -10,13 +10,13 @@
 
 **Google Apps Script を組織全体でスケールさせるためのインフラ。**
 
-既存の GAS テンプレートは「1 つのプロジェクトをモダンに開発する方法」を提供します。Apps Script Fleet はその先にある問題を解決します — このテンプレートからリポジトリを作成して Script ID を設定すれば、CI/CD パイプラインがすでに動いている状態でスタートできます。GitHub でも GitLab でも、クラウドでも Self-Managed でも動作します。
+既存の Apps Script テンプレートは「1 つのプロジェクトをモダンに開発する方法」を提供します。Apps Script Fleet はその先にある問題を解決します — このテンプレートからリポジトリを作成して Script ID を設定すれば、CI/CD パイプラインがすでに動いている状態でスタートできます。GitHub でも GitLab でも、クラウドでも Self-Managed でも動作します。
 
 **[→ クイックスタート](#クイックスタート)** · [含まれるもの](#含まれるもの) · [他のテンプレートとの違い](#他のテンプレートとの違い) · [FAQ](#faq)
 
 ## 課題
 
-GAS プロジェクトは小さく始まりますが、増殖します。Slack 通知、レポート自動生成、フォーム処理、Drive のファイル整理 — 気づけば組織に十数個のスクリプトが存在しています。それぞれに必要なもの：
+Apps Script プロジェクトは小さく始まりますが、増殖します。Slack 通知、レポート自動生成、フォーム処理、Drive のファイル整理 — 気づけば組織に十数個のスクリプトが存在しています。それぞれに必要なもの：
 
 - TypeScript の設定
 - バンドラ（Rollup, Webpack, Vite）
@@ -32,7 +32,7 @@ GAS プロジェクトは小さく始まりますが、増殖します。Slack �
 
 ![アーキテクチャ — 1 リポ 1 機能 + 共有インフラ](docs/architecture.png)
 
-Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い、組織レベルの共有インフラで支えます：
+Apps Script Fleet は各 Apps Script 機能を独立したリポジトリとして扱い、組織レベルの共有インフラで支えます：
 
 - **初回のみの設定**: `CLASPRC_JSON` を組織/グループレベルのシークレットに追加（[GitHub](https://docs.github.com/ja/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) または [GitLab](https://docs.gitlab.com/ci/variables/#for-a-group)）。このテンプレートから作成されたすべてのリポが自動的に利用します。
 - **プロジェクトごとの設定（約 5 分）**: テンプレートからリポを作成 → Script ID を設定 → 完了。PR/MR で CI が走り、マージで本番デプロイ。
@@ -47,7 +47,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 | カテゴリ   | ツール                                                 |
 | ---------- | ------------------------------------------------------ |
 | 言語       | TypeScript 7（strict モード）                          |
-| バンドラ   | Rollup（GAS 互換出力）                                 |
+| バンドラ   | Rollup（Apps Script 互換出力）                                 |
 | デプロイ   | clasp（dev / prod 環境）                               |
 | テスト     | Jest（カバレッジ閾値 80%）                             |
 | リント     | Oxlint, Oxfmt, Stylelint, HTMLHint                     |
@@ -66,13 +66,13 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 | ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
 | 設計思想           | 機能豊富な DX                                                                | 最小限の制約                                     |
 | 最適な用途         | 単一の複雑なプロジェクト                                                     | 多数の小さな自動化                               |
-| フロントエンド開発 | Vite + Alpine.js + Tailwind                                                  | 基本的な HTML（GAS 組み込み）                    |
+| フロントエンド開発 | Vite + Alpine.js + Tailwind                                                  | 基本的な HTML（Apps Script 組み込み）                    |
 | テスト             | Vitest（任意）                                                               | Jest（80% カバレッジ必須）                       |
 | テンプレート同期   | —                                                                            | 週次（自動 PR）                                  |
 | 組織レベルの認証   | —                                                                            | Secret Manager + WIF、キーレス CI（GitHub + GitLab） |
 
 > リッチな UI をクライアントサイドフレームワークで構築する場合は、[Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) が適しています。
-> 組織全体で 5 つ以上の小さな GAS 自動化を管理する場合は、Apps Script Fleet の出番です。
+> 組織全体で 5 つ以上の小さな Apps Script 自動化を管理する場合は、Apps Script Fleet の出番です。
 
 ## 組織セットアップ（初回のみ）
 
@@ -81,7 +81,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 詳細な手順: **[docs/secret-manager.ja.md](docs/secret-manager.ja.md)**。概要:
 
 1. **認証情報の格納**: デプロイ用アカウントの [Apps Script API を有効化](https://script.google.com/home/usersettings)し、そのアカウントで `clasp login` → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
-2. **WIF プール `gas-fleet` を作成**し、`github` / `gitlab` プロバイダを org/group に attribute 制限
+2. **WIF プール `apps-script-fleet` を作成**し、`github` / `gitlab` プロバイダを org/group に attribute 制限
 3. **`roles/secretmanager.secretAccessor` を付与**: CI の `principalSet://` と開発者 Google グループへ
 4. **org/group の CI 変数** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` を設定（両プラットフォーム同名）
 5. **各開発者**はマシンごとに1回 `./scripts/fetch-clasp-credentials.sh` を実行 — `~/.clasprc.json` は全リポで共有されます
@@ -94,7 +94,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 エアギャップ GitLab（`sts.googleapis.com` / `secretmanager.googleapis.com` への egress が無い環境）向け。`GCP_WIF_PROVIDER` 未設定時、CI は自動的にこちらを使います:
 
 1. **clasp にログイン**（CI/CD 用 Google アカウントで）: `npx @google/clasp login` → `~/.clasprc.json` が生成されます
-2. **組織のパスワードマネージャーに保存** — `~/.clasprc.json` の内容を共有クレデンシャルとして登録（例: 「clasp CI/CD — GAS Fleet」）
+2. **組織のパスワードマネージャーに保存** — `~/.clasprc.json` の内容を共有クレデンシャルとして登録（例: 「clasp CI/CD — Apps Script Fleet」）
 3. **`CLASPRC_JSON` を組織レベルの CI/CD シークレットに設定**:
    - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → `CLASPRC_JSON` を追加（値は JSON 全体）
    - **GitLab**: グループ → Settings → CI/CD → Variables → `CLASPRC_JSON` を追加（protected, masked）
@@ -104,7 +104,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 ### GCP プロジェクトの設定（任意、推奨）
 
-全 GAS プロジェクトを 1 つの標準 GCP プロジェクトに紐付けることで、Cloud Logging / Error Reporting / API 使用量の一元管理と、CI/CD からの `clasp run` による Script Properties 自動注入が可能になります。
+全 Apps Script プロジェクトを 1 つの標準 GCP プロジェクトに紐付けることで、Cloud Logging / Error Reporting / API 使用量の一元管理と、CI/CD からの `clasp run` による Script Properties 自動注入が可能になります。
 
 **前提条件：**
 
@@ -118,7 +118,7 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 ### プロジェクトごとの初期化
 
-`~/.clasprc.json` がローカルにある状態で、init スクリプトを実行すると GAS プロジェクトの作成と CI/CD 変数の設定を自動で行います：
+`~/.clasprc.json` がローカルにある状態で、init スクリプトを実行すると Apps Script プロジェクトの作成と CI/CD 変数の設定を自動で行います：
 
 ```bash
 ./scripts/init.sh \
@@ -130,11 +130,11 @@ Apps Script Fleet は各 GAS 機能を独立したリポジトリとして扱い
 
 オプション：
 
-- `--title "名前"` — GAS プロジェクト名（デフォルト: ディレクトリ名）
-- `--type standalone|sheets|docs|slides|forms` — GAS プロジェクトタイプ（デフォルト: `standalone`）
+- `--title "名前"` — Apps Script プロジェクト名（デフォルト: ディレクトリ名）
+- `--type standalone|sheets|docs|slides|forms` — Apps Script プロジェクトタイプ（デフォルト: `standalone`）
 - `--gcp-project <番号>` — 紐付ける GCP プロジェクト番号（Cloud Logging + `clasp run` が有効に）
 
-スクリプトは dev/prod の GAS プロジェクトを作成し、初回デプロイを行い、`CLASP_JSON` + `DEPLOYMENT_ID` を CI/CD プラットフォームに設定します。`--gcp-project` を指定した場合、GAS プロジェクトが GCP プロジェクトに紐付けられ、`GCP_PROJECT_NUMBER` が CI/CD 変数として設定されます。
+スクリプトは dev/prod の Apps Script プロジェクトを作成し、初回デプロイを行い、`CLASP_JSON` + `DEPLOYMENT_ID` を CI/CD プラットフォームに設定します。`--gcp-project` を指定した場合、Apps Script プロジェクトが GCP プロジェクトに紐付けられ、`GCP_PROJECT_NUMBER` が CI/CD 変数として設定されます。
 
 ### CI/CD 経由の Script Properties 注入
 
@@ -197,7 +197,7 @@ Push / PR  →  CI (ci.yml)  →  CD (cd.yml)
 ```
 your-project/
 ├── src/
-│   ├── index.ts           # GAS エントリポイント（doGet 等）
+│   ├── index.ts           # Apps Script エントリポイント（doGet 等）
 │   ├── greeting.ts        # ビジネスロジック（サンプル）
 │   └── app.html           # Web UI（サンプル）
 ├── test/
@@ -252,7 +252,7 @@ pnpm run deploy
 ### Template Sync
 
 - **GitHub**: `sync-template.yml` ワークフローが週次で上流テンプレートの更新をチェック。更新がある場合、`template-sync` ラベル付きの PR が自動作成されます。
-- **GitLab**: Group 内に Template Project を作成し、「Create from template」で各 GAS プロジェクトを作成。User Project は `TEMPLATE_REPO_URL`（Group Variable）経由で Template Project から同期します。詳細は [docs/setup-gitlab.ja.md](docs/setup-gitlab.ja.md) を参照。
+- **GitLab**: Group 内に Template Project を作成し、「Create from template」で各 Apps Script プロジェクトを作成。User Project は `TEMPLATE_REPO_URL`（Group Variable）経由で Template Project から同期します。詳細は [docs/setup-gitlab.ja.md](docs/setup-gitlab.ja.md) を参照。
 
 `.templatesyncignore` はホワイトリスト形式を採用しています — `:!` プレフィックス付きのファイルのみが同期対象です。プロジェクト固有のファイル（`src/`, `test/`, `README.md` 等）は自動的に除外されます。
 
@@ -291,7 +291,7 @@ pnpm run deploy
 2. `src/index.ts` でインポート — Rollup がすべてをバンドル
 3. `test/` にテストを追加
 
-> GAS から呼び出せるのは `src/index.ts` のトップレベルに定義された関数のみです。
+> Apps Script から呼び出せるのは `src/index.ts` のトップレベルに定義された関数のみです。
 
 ### カバレッジ閾値の調整
 
@@ -319,7 +319,7 @@ pnpm run deploy
 
 ## テスト
 
-テストは `test/` に配置し、Jest で実行します。`src/index.ts` はカバレッジ対象外です（`HtmlService` 等の GAS グローバルは Node.js で実行できないため）。
+テストは `test/` に配置し、Jest で実行します。`src/index.ts` はカバレッジ対象外です（`HtmlService` 等の Apps Script グローバルは Node.js で実行できないため）。
 
 ```
 pnpm run test              # カバレッジ付きで実行
@@ -343,11 +343,11 @@ Apps Script Fleet で構築された実プロジェクト:
 
 ### なぜモノレポではなく 1 リポ 1 機能？
 
-GAS プロジェクトは基本的に小さく自己完結した自動化です。モノレポはワークスペースツーリングや選択的デプロイなど、このスケールでは割に合わない複雑さを持ち込みます。リポを分けることで、独立した CI/CD、明確なオーナーシップ、シンプルなメンタルモデルが得られます。Template Sync と Renovate がメンテナンスのオーバーヘッドを吸収します。
+Apps Script プロジェクトは基本的に小さく自己完結した自動化です。モノレポはワークスペースツーリングや選択的デプロイなど、このスケールでは割に合わない複雑さを持ち込みます。リポを分けることで、独立した CI/CD、明確なオーナーシップ、シンプルなメンタルモデルが得られます。Template Sync と Renovate がメンテナンスのオーバーヘッドを吸収します。
 
 ### なぜデフォルトでカバレッジ 80%？
 
-小さく焦点の絞られた GAS 関数であれば、高いカバレッジは現実的に達成可能で、本番に届く前に微妙なバグを捕捉します。80% は採用障壁を低く保ちつつ、意味のある品質ゲートとして機能します。スコープが小さなプロジェクト（関数 5〜10 個）では、`jest.config.json` で 100% への引き上げを検討してください。
+小さく焦点の絞られた Apps Script 関数であれば、高いカバレッジは現実的に達成可能で、本番に届く前に微妙なバグを捕捉します。80% は採用障壁を低く保ちつつ、意味のある品質ゲートとして機能します。スコープが小さなプロジェクト（関数 5〜10 個）では、`jest.config.json` で 100% への引き上げを検討してください。
 
 ## ライセンス
 

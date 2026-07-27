@@ -14,8 +14,8 @@
 
 clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は Workload Identity Federation でキーレス取得します — 詳細: [secret-manager.ja.md](secret-manager.ja.md)。概要:
 
-1. CI/CD 用の専用 Google アカウント（例: `gas-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
-2. WIF プール `gas-fleet` に `gitlab` プロバイダを作成: `--issuer-uri` と `--allowed-audiences` の両方に GitLab のベース URL を設定（CI の JWT の `aud` は `$CI_SERVER_URL`）し、group に attribute 制限。
+1. CI/CD 用の専用 Google アカウント（例: `apps-script-deploy@yourcompany.com`）を作成し、`clasp login` を実行。`~/.clasprc.json` を secret `clasp-credentials` に格納します。
+2. WIF プール `apps-script-fleet` に `gitlab` プロバイダを作成: `--issuer-uri` と `--allowed-audiences` の両方に GitLab のベース URL を設定（CI の JWT の `aud` は `$CI_SERVER_URL`）し、group に attribute 制限。
 3. `principalSet://…/attribute.namespace_path/<group>` に `roles/secretmanager.secretAccessor` を付与。
 4. **Group CI/CD Variables** `GCP_WIF_PROVIDER` と `CLASPRC_SECRET` を設定 — **unprotected** で（protected にすると `dev` パイプラインから見えず、dev デプロイが気づかないうちに legacy モードに落ちます）。
 
@@ -35,7 +35,7 @@ clasp の共有認証情報を Google Cloud Secret Manager に格納し、CI は
 
 ### 2. Template Project の作成
 
-upstream テンプレートを GitLab Group にインポートします。このプロジェクトが組織内の全 GAS プロジェクトのソースになります。
+upstream テンプレートを GitLab Group にインポートします。このプロジェクトが組織内の全 Apps Script プロジェクトのソースになります。
 
 **方法 A — GitHub からインポート（github.com へのネットワークアクセスが必要）:**
 
@@ -58,7 +58,7 @@ git push -u origin main
 
 ### 3. Template Project に Template Sync を設定
 
-Template Project は GitHub から同期して最新の状態を保ちます。この設定は **Template Project にのみ**行います — 個々の GAS プロジェクトには不要です。
+Template Project は GitHub から同期して最新の状態を保ちます。この設定は **Template Project にのみ**行います — 個々の Apps Script プロジェクトには不要です。
 
 1. **Project Access Token** を作成（Settings → Access Tokens、`write_repository` スコープ）
 2. CI/CD Variable として `GITLAB_PUSH_TOKEN` の名前で追加
@@ -77,11 +77,11 @@ Template Project の **project レベル** CI/CD Variable として `TEMPLATE_RE
 https://gitlab.yourcompany.com/<your-group>/apps-script-fleet.git
 ```
 
-Group 内のすべての GAS プロジェクトがこの変数を自動的に継承し、GitHub ではなく Template Project から同期するようになります。
+Group 内のすべての Apps Script プロジェクトがこの変数を自動的に継承し、GitHub ではなく Template Project から同期するようになります。
 
 > **優先順位の仕組み:** Template Project の project レベル `TEMPLATE_REPO_URL`（GitHub または社内ミラーを指す）が Group Variable より優先されます。これにより、Template Project は GitHub から同期し、User Project は Template Project から同期します。
 
-## プロジェクトごと: 新しい GAS リポジトリの作成
+## プロジェクトごと: 新しい Apps Script リポジトリの作成
 
 ### 1. プロジェクトの作成
 
@@ -172,7 +172,7 @@ GitLab Free tier では「Create from template」（Group project templates）�
 テンプレートリポジトリのルートから実行：
 
 ```bash
-./scripts/create-gitlab-project.sh --group my-org --name my-gas-project
+./scripts/create-gitlab-project.sh --group my-org --name my-apps-script-project
 ```
 
 新しい GitLab リポジトリが作成され、テンプレートファイルがコピーされ、初回コミットが push されます。
@@ -187,10 +187,10 @@ GitLab Free tier では「Create from template」（Group project templates）�
 | `--visibility`  | `private`、`internal`、`public`       | `private`  |
 | `--description` | プロジェクトの説明                    |            |
 
-### 2. GAS プロジェクトの初期化と CI/CD 設定
+### 2. Apps Script プロジェクトの初期化と CI/CD 設定
 
 ```bash
-cd ../my-gas-project
+cd ../my-apps-script-project
 pnpm install
 ./scripts/init.sh --title "My Script" [--gcp-project <NUMBER>]
 ```

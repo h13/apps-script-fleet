@@ -81,7 +81,7 @@ Before your team can use Apps Script Fleet, an org admin stores the shared clasp
 Full step-by-step guide: **[docs/secret-manager.md](docs/secret-manager.md)**. In outline:
 
 1. **Store credentials**: enable the [Apps Script API](https://script.google.com/home/usersettings) for the deploy account, `clasp login` with it → `gcloud secrets versions add clasp-credentials --data-file="$HOME/.clasprc.json"`
-2. **Create WIF pool `gas-fleet`** with `github` / `gitlab` providers, attribute-restricted to your org/group
+2. **Create WIF pool `apps-script-fleet`** with `github` / `gitlab` providers, attribute-restricted to your org/group
 3. **Grant `roles/secretmanager.secretAccessor`** to the CI `principalSet://` and to the developer Google group
 4. **Set org/group CI variables** `GCP_WIF_PROVIDER` + `CLASPRC_SECRET` (same names on both platforms)
 5. **Each developer** runs `./scripts/fetch-clasp-credentials.sh` once per machine — `~/.clasprc.json` is shared by every repo
@@ -94,7 +94,7 @@ Full step-by-step guide: **[docs/secret-manager.md](docs/secret-manager.md)**. I
 For air-gapped GitLab instances (no egress to `sts.googleapis.com` / `secretmanager.googleapis.com`). CI uses this automatically when `GCP_WIF_PROVIDER` is not set:
 
 1. **Login to clasp** with the CI/CD Google account: `npx @google/clasp login` → generates `~/.clasprc.json`
-2. **Save to your org's password manager** — share the contents as a shared credential entry (e.g., "clasp CI/CD — GAS Fleet")
+2. **Save to your org's password manager** — share the contents as a shared credential entry (e.g., "clasp CI/CD — Apps Script Fleet")
 3. **Set `CLASPRC_JSON` as an org-level CI/CD secret**:
    - **GitHub**: [Organization secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) → add `CLASPRC_JSON` with the full JSON content
    - **GitLab**: Group → Settings → CI/CD → Variables → add `CLASPRC_JSON` (protected, masked)
@@ -104,7 +104,7 @@ For air-gapped GitLab instances (no egress to `sts.googleapis.com` / `secretmana
 
 ### GCP Project Setup (Optional, Recommended)
 
-Binding all GAS projects to a single standard GCP project enables centralized Cloud Logging, Error Reporting, API usage monitoring, and `clasp run` for CI/CD property injection.
+Binding all Apps Script projects to a single standard GCP project enables centralized Cloud Logging, Error Reporting, API usage monitoring, and `clasp run` for CI/CD property injection.
 
 **Prerequisites:**
 
@@ -118,7 +118,7 @@ Binding all GAS projects to a single standard GCP project enables centralized Cl
 
 ### Per-Project Init
 
-Once `~/.clasprc.json` is on your machine, run the init script to create GAS projects and configure CI/CD variables automatically:
+Once `~/.clasprc.json` is on your machine, run the init script to create Apps Script projects and configure CI/CD variables automatically:
 
 ```bash
 ./scripts/init.sh \
@@ -130,11 +130,11 @@ The platform (GitHub or GitLab) is detected automatically from the authenticated
 
 Options:
 
-- `--title "Name"` — GAS project title (default: directory name)
-- `--type standalone|sheets|docs|slides|forms` — GAS project type (default: `standalone`)
+- `--title "Name"` — Apps Script project title (default: directory name)
+- `--type standalone|sheets|docs|slides|forms` — Apps Script project type (default: `standalone`)
 - `--gcp-project <NUMBER>` — GCP project number to bind (enables Cloud Logging + `clasp run`)
 
-The script creates dev/prod GAS projects, deploys initial versions, and sets `CLASP_JSON` + `DEPLOYMENT_ID` on your CI/CD platform. When `--gcp-project` is specified, the projects are bound to the GCP project and `GCP_PROJECT_NUMBER` is set as a CI/CD variable.
+The script creates dev/prod Apps Script projects, deploys initial versions, and sets `CLASP_JSON` + `DEPLOYMENT_ID` on your CI/CD platform. When `--gcp-project` is specified, the projects are bound to the GCP project and `GCP_PROJECT_NUMBER` is set as a CI/CD variable.
 
 ### Script Properties via CI/CD
 
@@ -252,7 +252,7 @@ pnpm run deploy
 ### Template Sync
 
 - **GitHub**: The `sync-template.yml` workflow checks for upstream template updates weekly. When updates are found, a PR with the `template-sync` label is created.
-- **GitLab**: Create a Template Project in your Group, then use "Create from template" for each GAS project. User Projects sync from the Template Project via `TEMPLATE_REPO_URL` (Group Variable). See [docs/setup-gitlab.md](docs/setup-gitlab.md) for details.
+- **GitLab**: Create a Template Project in your Group, then use "Create from template" for each Apps Script project. User Projects sync from the Template Project via `TEMPLATE_REPO_URL` (Group Variable). See [docs/setup-gitlab.md](docs/setup-gitlab.md) for details.
 
 `.templatesyncignore` uses a whitelist format — only files with `:!` prefix are synced. Your project-specific files (`src/`, `test/`, `README.md`, etc.) are automatically excluded.
 
