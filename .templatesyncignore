@@ -46,6 +46,7 @@
 :!scripts/init.sh
 :!scripts/set-properties.sh
 :!scripts/gcp-get-secret.sh
+:!scripts/fetch-clasp-credentials.sh
 
 # Hook examples
 :!.github/hooks/post-deploy.sh.example
