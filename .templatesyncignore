@@ -41,6 +41,8 @@
 :!docs/setup-github.ja.md
 :!docs/setup-gitlab.md
 :!docs/setup-gitlab.ja.md
+:!docs/secret-manager.md
+:!docs/secret-manager.ja.md
 
 # Scripts
 :!scripts/init.sh
