@@ -27,8 +27,8 @@ importers:
         specifier: 0.2.39
         version: 0.2.39(@swc/core@1.15.47)
       '@types/google-apps-script':
-        specifier: 2.0.11
-        version: 2.0.11
+        specifier: 2.0.12
+        version: 2.0.12
       '@types/jest':
         specifier: 30.0.0
         version: 30.0.0
@@ -1180,8 +1180,8 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/google-apps-script@2.0.11':
-    resolution: {integrity: sha512-D+UWQKXUd4KgScQ+iqqx4jYxZXmU7cYCWHlikmUckIfFvblTcG4d3tQsjJAA261wmFZOya+WWd8L6/0bvSLjHQ==}
+  '@types/google-apps-script@2.0.12':
+    resolution: {integrity: sha512-k6qjm5tG0HNsnn6WFwj0+1mqUesuJjOylb4Eer4u5vYtP9ITYg96V6tNegAgDXPl9aK8RRvx6U7n3f2HEckmXQ==}
 
   '@types/istanbul-lib-coverage@2.0.6':
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
@@ -4537,7 +4537,7 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/google-apps-script@2.0.11': {}
+  '@types/google-apps-script@2.0.12': {}
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
