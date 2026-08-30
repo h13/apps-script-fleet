@@ -1,6 +1,6 @@
 {
   "name": "apps-script-fleet",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:26",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
   },
