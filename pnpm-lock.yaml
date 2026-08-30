@@ -12,8 +12,8 @@ importers:
   .:
     devDependencies:
       '@google/clasp':
-        specifier: 3.4.0
-        version: 3.4.0(@types/node@26.1.1)(supports-color@10.2.2)
+        specifier: 3.4.1
+        version: 3.4.1(@types/node@26.1.1)(supports-color@10.2.2)
       '@rollup/plugin-node-resolve':
         specifier: 16.0.3
         version: 16.0.3(rollup@4.63.0)
@@ -310,8 +310,8 @@ packages:
   '@formatjs/intl@4.1.19':
     resolution: {integrity: sha512-bZMROATl+rzfL8wsDZ53i8XWHx5e6rVr8QlGT5GDvHImEUro4WE9pxUd2dobzmI3CtD+zkt/wkEdqcb+3CK8Fg==}
 
-  '@google/clasp@3.4.0':
-    resolution: {integrity: sha512-R1F+LL+nuVuGayj/Qob5E9Eiu1UI1w0DQiB+Rl302wpdungJ5NXOIBoD1DkyI324C4nWs3KhHGJXRCpuOpuS1g==}
+  '@google/clasp@3.4.1':
+    resolution: {integrity: sha512-92wlpu0loC9t4oADuTyJOxQm6T4H2dOD9oQ+BvdFJuzM2uP7cK5dGrrJQhb/m/HLbaR0UOsBXBqRlYbfyR9jbA==}
     engines: {node: ' >=20.0.0'}
     hasBin: true
 
@@ -3729,7 +3729,7 @@ snapshots:
       '@formatjs/icu-messageformat-parser': 3.5.17
       intl-messageformat: 11.2.14
 
-  '@google/clasp@3.4.0(@types/node@26.1.1)(supports-color@10.2.2)':
+  '@google/clasp@3.4.1(@types/node@26.1.1)(supports-color@10.2.2)':
     dependencies:
       '@formatjs/intl': 4.1.19
       '@modelcontextprotocol/sdk': 1.30.0(supports-color@10.2.2)(zod@3.25.76)
@@ -3738,7 +3738,7 @@ snapshots:
       cli-truncate: 4.0.0
       commander: 13.1.0
       debug: 4.4.3(supports-color@10.2.2)
-      fdir: 6.5.0(picomatch@4.0.5)
+      fdir: 6.5.0(picomatch@4.0.7)
       find-up: 7.0.0
       fuzzy: 0.1.3
       google-auth-library: 10.5.0(supports-color@10.2.2)
@@ -3754,7 +3754,7 @@ snapshots:
       open: 10.2.0
       ora: 8.2.0
       p-map: 7.0.6
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       read-package-up: 11.0.0
       server-destroy: 1.0.1
       split-lines: 3.0.0
@@ -5182,9 +5182,9 @@ snapshots:
     dependencies:
       bser: 2.1.1
 
-  fdir@6.5.0(picomatch@4.0.5):
+  fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   fetch-blob@3.2.0:
     dependencies:
@@ -5745,7 +5745,7 @@ snapshots:
       jest-regex-util: 30.4.0
       jest-util: 30.4.1
       jest-worker: 30.4.1
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       walker: 1.0.8
     optionalDependencies:
       fsevents: 2.3.3
@@ -5770,7 +5770,7 @@ snapshots:
       chalk: 4.1.2
       graceful-fs: 4.2.11
       jest-util: 30.4.1
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       pretty-format: 30.4.1
       slash: 3.0.0
       stack-utils: 2.0.6
@@ -5892,7 +5892,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   jest-validate@30.4.1:
     dependencies:
