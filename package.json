@@ -24,7 +24,7 @@
     "@rollup/plugin-swc": "0.4.1",
     "@swc/core": "1.16.1",
     "@swc/jest": "0.2.39",
-    "@types/google-apps-script": "2.0.12",
+    "@types/google-apps-script": "2.0.13",
     "@types/jest": "30.0.0",
     "htmlhint": "1.9.2",
     "husky": "9.1.7",
