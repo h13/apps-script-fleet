@@ -28,7 +28,7 @@
     "@types/jest": "30.0.0",
     "htmlhint": "1.9.2",
     "husky": "9.1.7",
-    "jest": "30.4.2",
+    "jest": "30.5.1",
     "lint-staged": "17.4.1",
     "oxfmt": "0.66.0",
     "oxlint": "1.81.0",
