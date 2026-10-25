@@ -20,7 +20,7 @@ check:
 
 templatesyncignore_check:
   stage: check
-  image: alpine/git@sha256:4fac439ee3b9204bec99c712b8a15942999632458f716ae8149fbb97cb760cd4
+  image: alpine/git@sha256:e8ceedc73bd80992ae8d58a7d24c58b8322146c354f1d2e81a97db4452068ec0
   script:
     - |
       set -f  # disable globbing to safely expand $WHITELIST
