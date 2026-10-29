@@ -2,7 +2,7 @@
 
 check:
   stage: check
-  image: node:24@sha256:e2007d1f4e652444f88d9bb196256d2d035269015e3d27a0d47c1d0cb5192a98
+  image: node:24@sha256:e7add2a490bb17d97b485b8641bd88455fff7839ade0f5eba493c3508124d413
   before_script:
     - corepack enable
     - pnpm config set store-dir .pnpm-store
