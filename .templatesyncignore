@@ -6,17 +6,6 @@
 # IMPORTANT: When adding a new file to the template, add it here too.
 # The CI check "templatesyncignore_check" will catch missing entries.
 
-# CI/CD — GitHub Actions
-:!.github/workflows/ci.yml
-:!.github/workflows/cd.yml
-:!.github/workflows/sync-template.yml
-
-# CI/CD — GitLab
-:!.gitlab-ci.yml
-:!.gitlab/ci.yml
-:!.gitlab/cd.yml
-:!.gitlab/sync-template.yml
-
 # Build & tooling
 :!.oxlintrc.json
 :!.oxfmtrc.json

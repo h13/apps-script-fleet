@@ -36,7 +36,7 @@ Apps Script Fleet treats each function as an independent repository, backed by s
 
 - **One-time setup**: Add `CLASPRC_JSON` to your org/group-level secrets ([GitHub](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) or [GitLab](https://docs.gitlab.com/ci/variables/#for-a-group)). Every repo created from this template uses it automatically.
 - **Per-project setup (~5 min)**: Create a repo from this template → set your script ID → done. CI runs on PRs/MRs, CD deploys on merge.
-- **Fleet maintenance**: [Renovate](https://docs.renovatebot.com/) auto-updates dependencies across all repos. [Template sync](.github/workflows/sync-template.yml) propagates tooling improvements from the upstream template.
+- **Fleet maintenance**: [Renovate](https://docs.renovatebot.com/) auto-updates dependencies and CI action versions across all repos. [Template sync](.github/workflows/sync-template.yml) propagates tooling configs, scripts, and docs from the upstream template. CI workflow logic itself is adopted per repo — GitHub's Actions token cannot push workflow files, and the fleet keeps the same policy on GitLab for consistency.
 
 The difference at a glance:
 
@@ -62,13 +62,13 @@ The result — your day looks like this:
 
 ## How This Differs
 
-|                | [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) | Apps Script Fleet                            |
-| -------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| Philosophy     | Feature-rich DX                                                              | Minimal constraints                          |
-| Best for       | Single complex project                                                       | Many small automations                       |
-| Frontend dev   | Vite + Alpine.js + Tailwind                                                  | Basic HTML (Apps Script built-in)            |
-| Testing        | Vitest (optional)                                                            | Jest (80% coverage enforced)                 |
-| Template sync  | —                                                                            | Weekly (auto-PR)                             |
+|                | [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) | Apps Script Fleet                                  |
+| -------------- | ---------------------------------------------------------------------------- | -------------------------------------------------- |
+| Philosophy     | Feature-rich DX                                                              | Minimal constraints                                |
+| Best for       | Single complex project                                                       | Many small automations                             |
+| Frontend dev   | Vite + Alpine.js + Tailwind                                                  | Basic HTML (Apps Script built-in)                  |
+| Testing        | Vitest (optional)                                                            | Jest (80% coverage enforced)                       |
+| Template sync  | —                                                                            | Weekly (auto-PR)                                   |
 | Org-level auth | —                                                                            | Secret Manager + WIF, keyless CI (GitHub + GitLab) |
 
 > Building a rich UI with client-side frameworks? [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) is the better fit.
@@ -141,9 +141,11 @@ The script creates dev/prod Apps Script projects, deploys initial versions, and 
 When GCP project integration is configured, you can automatically inject Script Properties during deployment:
 
 1. **Set `SCRIPT_PROPERTIES`** as a CI/CD secret (JSON string per environment):
+
    ```json
    { "API_KEY": "xxx", "SLACK_WEBHOOK": "https://hooks.slack.com/..." }
    ```
+
 2. Properties are injected automatically after `clasp deploy` when both `GCP_PROJECT_NUMBER` and `SCRIPT_PROPERTIES` are set
 3. See `.github/hooks/post-deploy.sh.example` or `.gitlab/post-deploy.yml.example` for hook-based alternatives
 
@@ -255,6 +257,8 @@ pnpm run deploy
 - **GitLab**: Create a Template Project in your Group, then use "Create from template" for each Apps Script project. User Projects sync from the Template Project via `TEMPLATE_REPO_URL` (Group Variable). See [docs/setup-gitlab.md](docs/setup-gitlab.md) for details.
 
 `.templatesyncignore` uses a whitelist format — only files with `:!` prefix are synced. Your project-specific files (`src/`, `test/`, `README.md`, etc.) are automatically excluded.
+
+CI/CD files (`.github/workflows/`, `.gitlab-ci.yml`, `.gitlab/*.yml`) are not synced: GitHub rejects workflow pushes from the default Actions token, and the fleet applies the same policy on GitLab for consistency. Version bumps inside CI files (action SHAs, images) arrive via Renovate; changes to the CI logic itself are adopted per repo deliberately.
 
 ### Renovate
 
