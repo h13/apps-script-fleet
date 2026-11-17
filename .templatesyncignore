@@ -11,8 +11,6 @@
 :!.oxfmtrc.json
 :!rollup.config.mjs
 :!tsconfig.json
-:!package.json
-:!pnpm-workspace.yaml
 :!.htmlhintrc
 :!.stylelintrc.json
 :!.editorconfig
