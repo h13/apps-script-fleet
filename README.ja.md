@@ -36,7 +36,7 @@ Apps Script Fleet は各 Apps Script 機能を独立したリポジトリとし�
 
 - **初回のみの設定**: `CLASPRC_JSON` を組織/グループレベルのシークレットに追加（[GitHub](https://docs.github.com/ja/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) または [GitLab](https://docs.gitlab.com/ci/variables/#for-a-group)）。このテンプレートから作成されたすべてのリポが自動的に利用します。
 - **プロジェクトごとの設定（約 5 分）**: テンプレートからリポを作成 → Script ID を設定 → 完了。PR/MR で CI が走り、マージで本番デプロイ。
-- **一括メンテナンス**: [Renovate](https://docs.renovatebot.com/) が全リポの依存関係を自動更新。[Template Sync](.github/workflows/sync-template.yml) がツーリングの改善を上流テンプレートから自動伝播。
+- **一括メンテナンス**: [Renovate](https://docs.renovatebot.com/) が全リポの依存関係と CI 内の actions バージョンを自動更新。[Template Sync](.github/workflows/sync-template.yml) がツール設定・スクリプト・ドキュメントを上流テンプレートから自動伝播。CI ワークフローのロジック自体は各リポで意図的に取り込む方式（GitHub の Actions トークンはワークフローファイルを push できないため。GitLab も一貫性のため同じ方針）。
 
 違いを一目で：
 
@@ -47,7 +47,7 @@ Apps Script Fleet は各 Apps Script 機能を独立したリポジトリとし�
 | カテゴリ   | ツール                                                 |
 | ---------- | ------------------------------------------------------ |
 | 言語       | TypeScript 7（strict モード）                          |
-| バンドラ   | Rollup（Apps Script 互換出力）                                 |
+| バンドラ   | Rollup（Apps Script 互換出力）                         |
 | デプロイ   | clasp（dev / prod 環境）                               |
 | テスト     | Jest（カバレッジ閾値 80%）                             |
 | リント     | Oxlint, Oxfmt, Stylelint, HTMLHint                     |
@@ -62,13 +62,13 @@ Apps Script Fleet は各 Apps Script 機能を独立したリポジトリとし�
 
 ## 他のテンプレートとの違い
 
-|                    | [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) | Apps Script Fleet                                |
-| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
-| 設計思想           | 機能豊富な DX                                                                | 最小限の制約                                     |
-| 最適な用途         | 単一の複雑なプロジェクト                                                     | 多数の小さな自動化                               |
-| フロントエンド開発 | Vite + Alpine.js + Tailwind                                                  | 基本的な HTML（Apps Script 組み込み）                    |
-| テスト             | Vitest（任意）                                                               | Jest（80% カバレッジ必須）                       |
-| テンプレート同期   | —                                                                            | 週次（自動 PR）                                  |
+|                    | [Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) | Apps Script Fleet                                    |
+| ------------------ | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 設計思想           | 機能豊富な DX                                                                | 最小限の制約                                         |
+| 最適な用途         | 単一の複雑なプロジェクト                                                     | 多数の小さな自動化                                   |
+| フロントエンド開発 | Vite + Alpine.js + Tailwind                                                  | 基本的な HTML（Apps Script 組み込み）                |
+| テスト             | Vitest（任意）                                                               | Jest（80% カバレッジ必須）                           |
+| テンプレート同期   | —                                                                            | 週次（自動 PR）                                      |
 | 組織レベルの認証   | —                                                                            | Secret Manager + WIF、キーレス CI（GitHub + GitLab） |
 
 > リッチな UI をクライアントサイドフレームワークで構築する場合は、[Apps Script Engine](https://github.com/WildH0g/apps-script-engine-template) が適しています。
@@ -141,9 +141,11 @@ Apps Script Fleet は各 Apps Script 機能を独立したリポジトリとし�
 GCP プロジェクト統合が設定されている場合、デプロイ時に Script Properties を自動注入できます：
 
 1. **`SCRIPT_PROPERTIES`** を CI/CD シークレットとして設定（環境ごとの JSON 文字列）：
+
    ```json
    { "API_KEY": "xxx", "SLACK_WEBHOOK": "https://hooks.slack.com/..." }
    ```
+
 2. `GCP_PROJECT_NUMBER` と `SCRIPT_PROPERTIES` の両方が設定されている場合、`clasp deploy` 後に自動的にプロパティが注入されます
 3. hook ベースの代替方法は `.github/hooks/post-deploy.sh.example` または `.gitlab/post-deploy.yml.example` を参照
 
@@ -255,6 +257,8 @@ pnpm run deploy
 - **GitLab**: Group 内に Template Project を作成し、「Create from template」で各 Apps Script プロジェクトを作成。User Project は `TEMPLATE_REPO_URL`（Group Variable）経由で Template Project から同期します。詳細は [docs/setup-gitlab.ja.md](docs/setup-gitlab.ja.md) を参照。
 
 `.templatesyncignore` はホワイトリスト形式を採用しています — `:!` プレフィックス付きのファイルのみが同期対象です。プロジェクト固有のファイル（`src/`, `test/`, `README.md` 等）は自動的に除外されます。
+
+CI/CD ファイル（`.github/workflows/`, `.gitlab-ci.yml`, `.gitlab/*.yml`）は同期対象外です。GitHub は Actions の既定トークンによるワークフローファイルの push を拒否するため同期が失敗し、GitLab も一貫性のため同じ方針を取ります。CI ファイル内のバージョン更新（actions の SHA、image タグ）は Renovate が担い、CI ロジック自体の変更は各リポで意図的に取り込みます。
 
 ### Renovate
 
