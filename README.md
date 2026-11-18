@@ -270,6 +270,8 @@ Configured via [`h13/renovate-config:node`](https://github.com/h13/renovate-conf
 - 7-day stability buffer before updating
 - Runs weekly on Sunday after 9pm
 
+Repositories created from this template need the [Renovate app](https://github.com/apps/renovate) installed — see the [installation guide](https://docs.renovatebot.com/getting-started/installing-onboarding/).
+
 ## Customization
 
 ### Adding OAuth Scopes
